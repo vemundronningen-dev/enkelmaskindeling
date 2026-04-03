@@ -4,33 +4,6 @@ import { MachineStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 
-export async function createMachine(formData: FormData) {
-  const machineNumber = formData.get('machineNumber')?.toString();
-  const brand = formData.get('brand')?.toString();
-  const model = formData.get('model')?.toString();
-  const serialNumber = formData.get('serialNumber')?.toString() || null;
-  const type = formData.get('type')?.toString();
-  const project = formData.get('project')?.toString();
-
-  if (!machineNumber || !brand || !model || !type || !project) return;
-
-  await prisma.machine.create({
-    data: {
-      machineNumber,
-      brand,
-      model,
-      serialNumber,
-      type,
-      project,
-      status: MachineStatus.LEDIG
-    }
-  });
-
-  revalidatePath('/machines');
-  revalidatePath('/available');
-  revalidatePath('/users');
-}
-
 export async function updateResponsibleUser(formData: FormData) {
   const machineId = formData.get('machineId')?.toString();
   const userId = formData.get('userId')?.toString() || null;
@@ -57,15 +30,13 @@ export async function updateResponsibleUser(formData: FormData) {
 
 export async function updateMachine(formData: FormData) {
   const machineId = formData.get('machineId')?.toString();
+  const name = formData.get('name')?.toString();
   const machineNumber = formData.get('machineNumber')?.toString();
-  const brand = formData.get('brand')?.toString();
-  const model = formData.get('model')?.toString();
-  const serialNumber = formData.get('serialNumber')?.toString() || null;
   const type = formData.get('type')?.toString();
   const project = formData.get('project')?.toString();
   const status = formData.get('status')?.toString() as MachineStatus;
 
-  if (!machineId || !machineNumber || !brand || !model || !type || !project || !status) return;
+  if (!machineId || !name || !machineNumber || !type || !project || !status) return;
 
   const existing = await prisma.machine.findUnique({ where: { id: machineId } });
   if (!existing) return;
@@ -75,10 +46,8 @@ export async function updateMachine(formData: FormData) {
   await prisma.machine.update({
     where: { id: machineId },
     data: {
+      name,
       machineNumber,
-      brand,
-      model,
-      serialNumber,
       type,
       project,
       status: safeStatus

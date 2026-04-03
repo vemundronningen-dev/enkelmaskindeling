@@ -1,105 +1,75 @@
 # Maskinoversikt (MVP)
 
-En veldig enkel app for maskiner og brukere.
+Veldig enkel webapp for maskiner og brukere.
 
 ## Teknologi
-- Next.js 14
+- Next.js
 - Tailwind CSS
 - Prisma
 - Neon Postgres
 - Vercel
 
+## Funksjoner
+- `/machines` viser alle maskiner i tabell
+- Velg/fjern ansvarlig bruker direkte i tabellen
+- Status blir automatisk:
+  - ansvarlig bruker valgt -> **Tildelt**
+  - ansvarlig bruker fjernet -> **Ledig**
+- `/available` viser kun maskiner med status **Ledig**
+- `/users` viser alle brukere og maskiner de er ansvarlig for
 
-## Maskinfelter
-Hver maskin har nå:
-- maskinnummer
-- merke
-- modell
-- serienummer (valgfritt)
-- type
-- prosjekt
-- status
-- ansvarlig bruker
+## 1) Enkel lokal oppstart
 
-På `/machines` kan du også **opprette ny maskin**.
+```bash
+npm install
+cp .env.example .env
+```
 
-## Viktig om deploy
-Denne appen bruker Prisma i runtime på sidene:
-- `/machines`
-- `/available`
-- `/users`
-
-Sidene er satt til **dynamiske** for å unngå prerender-feil under build.
-
-## Miljøvariabler
-Legg inn disse i Vercel:
-
-1. `DATABASE_URL` (obligatorisk)
-2. `SETUP_TOKEN` (valgfri, men anbefalt for å beskytte setup-endepunkt)
-
-Lokal `.env`:
+Legg inn Neon connection string i `.env`:
 
 ```env
 DATABASE_URL="postgresql://..."
-SETUP_TOKEN="valgfri-hemmelig-token"
 ```
 
-## Én-klikks DB-setup uten lokal CLI
-Appen har et runtime-endepunkt:
+Kjør så:
 
-- `GET /api/setup`
-- `POST /api/setup`
-
-Dette endepunktet gjør automatisk:
-1. Oppretter enum `MachineStatus` hvis den mangler
-2. Oppretter tabellene `User` og `Machine` hvis de mangler
-3. Oppretter nødvendige unike indekser og foreign key
-4. Seeder demo-data hvis tabellene er tomme
-
-### Kall setup etter deploy
-Uten token:
-
-```text
-https://DITT-DOMENE/api/setup
-```
-
-Med token:
-
-```text
-https://DITT-DOMENE/api/setup?token=DITT_SETUP_TOKEN
-```
-
-Svar ved suksess (eksempel):
-
-```json
-{
-  "ok": true,
-  "message": "Database er klar.",
-  "seeded": true,
-  "users": 5,
-  "machines": 12
-}
-```
-
-## Vercel-steg (enkelt)
-1. Legg inn `DATABASE_URL` i Vercel prosjektet.
-2. (Anbefalt) Legg inn `SETUP_TOKEN`.
-3. Deploy.
-4. Kall `https://DITT-DOMENE/api/setup` én gang (med token hvis satt).
-5. Åpne `/machines`, `/available`, `/users`.
-
-## Neon SQL Editor
-Du trenger normalt **ikke** gjøre noe manuelt i Neon SQL Editor.
-Setup-endepunktet oppretter schema automatisk.
-
-## Lokal kjøring (valgfritt)
 ```bash
-npm install
+npm run prisma:generate
+npm run prisma:push
+npm run seed
 npm run dev
 ```
 
-Hvis databasen er tom lokalt, kall:
+Åpne: `http://localhost:3000/machines`
 
-```text
-http://localhost:3000/api/setup
+## 2) Slik lager du database i Neon
+1. Lag konto på Neon og opprett et nytt prosjekt.
+2. Lag en database (f.eks. `maskinoversikt`).
+3. Kopier connection string fra Neon Dashboard.
+4. Lim den inn i `.env` lokalt som `DATABASE_URL`.
+
+## 3) Deploy til Vercel
+1. Push prosjektet til GitHub.
+2. Importer repoet i Vercel.
+3. Gå til **Project Settings -> Environment Variables**.
+4. Legg inn:
+   - `DATABASE_URL` = connection string fra Neon.
+5. Deploy.
+
+Etter første deploy, åpne Vercel terminal eller kjør lokalt mot samme database:
+
+```bash
+npm run prisma:push
+npm run seed
 ```
+
+## 4) Enkel admin-løsning
+Denne MVP-en har **ingen login** (bevisst for enkelhet).
+Det gjør den enkel å teste, enkel å forstå, og enkel å bytte til ekte innlogging senere.
+
+## 5) Prosjektstruktur
+- `app/machines` - maskinliste + redigering + ansvarlig bruker
+- `app/available` - ledige maskiner
+- `app/users` - brukerliste
+- `prisma/schema.prisma` - datamodell
+- `prisma/seed.ts` - demo-data
