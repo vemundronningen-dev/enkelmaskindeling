@@ -17,10 +17,16 @@ export async function ensureDatabaseSetup() {
       "id" TEXT NOT NULL,
       "name" TEXT NOT NULL,
       "email" TEXT NOT NULL,
+      "phone" TEXT,
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT "User_pkey" PRIMARY KEY ("id")
     );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    ALTER TABLE "User"
+    ADD COLUMN IF NOT EXISTS "phone" TEXT;
   `);
 
   await prisma.$executeRawUnsafe(`
@@ -72,11 +78,11 @@ export async function ensureDatabaseSetup() {
   if (userCount === 0) {
     await prisma.user.createMany({
       data: [
-        { name: 'Ola Nordmann', email: 'ola@example.com' },
-        { name: 'Kari Hansen', email: 'kari@example.com' },
-        { name: 'Per Olsen', email: 'per@example.com' },
-        { name: 'Anne Nilsen', email: 'anne@example.com' },
-        { name: 'Mina Johansen', email: 'mina@example.com' }
+        { name: 'Ola Nordmann', email: 'ola@example.com', phone: '+47 900 00 001' },
+        { name: 'Kari Hansen', email: 'kari@example.com', phone: '+47 900 00 002' },
+        { name: 'Per Olsen', email: 'per@example.com', phone: '+47 900 00 003' },
+        { name: 'Anne Nilsen', email: 'anne@example.com', phone: '+47 900 00 004' },
+        { name: 'Mina Johansen', email: 'mina@example.com', phone: '+47 900 00 005' }
       ]
     });
     seeded = true;

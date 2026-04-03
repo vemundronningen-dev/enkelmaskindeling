@@ -10,8 +10,7 @@ export const metadata: Metadata = {
 const menu = [
   { href: '/machines', label: 'Maskiner' },
   { href: '/available', label: 'Ledige maskiner' },
-  { href: '/users', label: 'Brukere' },
-  { href: '/projects', label: 'Prosjekter' }
+  { href: '/users', label: 'Brukere' }
 ];
 
 export default function RootLayout({
