@@ -1,7 +1,8 @@
-import { MachineStatus } from '@prisma/client';
+import { MachineStatus, UserRole } from '@prisma/client';
 import { StatusBadge } from '@/app/components/status-badge';
 import { ensureDatabaseSetup } from '@/lib/db-init';
 import { prisma } from '@/lib/prisma';
+import { requireUser } from '@/lib/auth';
 import { createMachine, updateMachine, updateResponsibleUser } from './actions';
 
 type MachinesPageProps = {
@@ -19,15 +20,34 @@ const statusOptions: { value: MachineStatus; label: string }[] = [
 export const dynamic = 'force-dynamic';
 
 export default async function MachinesPage({ searchParams }: MachinesPageProps) {
+  const user = await requireUser();
   const editId = searchParams?.edit;
   await ensureDatabaseSetup();
 
-  const [machines, users] = await Promise.all([
+  const scopeWhere =
+    user.role === UserRole.SUPERADMIN
+      ? {}
+      : {
+          projectRef: {
+            companyId: user.companyId ?? undefined,
+            ...(user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId ? { departmentId: user.departmentId } : {})
+          }
+        };
+
+  const [machines, users, projects] = await Promise.all([
     prisma.machine.findMany({
-      include: { responsibleUser: true },
+      where: scopeWhere,
+      include: { responsibleUser: true, projectRef: true },
       orderBy: { machineNumber: 'asc' }
     }),
-    prisma.user.findMany({ orderBy: { name: 'asc' } })
+    prisma.user.findMany({
+      where: user.role === UserRole.SUPERADMIN ? {} : { companyId: user.companyId ?? undefined },
+      orderBy: { name: 'asc' }
+    }),
+    prisma.project.findMany({
+      where: user.role === UserRole.SUPERADMIN ? {} : { companyId: user.companyId ?? undefined },
+      orderBy: { name: 'asc' }
+    })
   ]);
 
   const machineToEdit = machines.find((machine) => machine.id === editId);
@@ -60,7 +80,14 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
           </label>
           <label className="text-sm font-medium">
             Prosjekt
-            <input name="project" className="mt-1 w-full rounded-md border px-3 py-2" placeholder="Eks. E6 Nord" required />
+            <select name="projectId" className="mt-1 w-full rounded-md border px-3 py-2" required>
+              <option value="">Velg prosjekt</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
           </label>
           <div className="md:col-span-2">
             <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
@@ -99,13 +126,13 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
             </label>
             <label className="text-sm font-medium">
               Prosjekt
-              <input
-                name="project"
-                defaultValue={machineToEdit.project}
-                className="mt-1 w-full rounded-md border px-3 py-2"
-                placeholder="Eks. E6 Nord"
-                required
-              />
+              <select name="projectId" defaultValue={machineToEdit.projectId ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" required>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
             </label>
             <label className="text-sm font-medium md:col-span-2">
               Status
@@ -145,7 +172,7 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
                 <td className="px-3 py-2">{machine.name}</td>
                 <td className="px-3 py-2">{machine.machineNumber}</td>
                 <td className="px-3 py-2">{machine.type}</td>
-                <td className="px-3 py-2">{machine.project}</td>
+                <td className="px-3 py-2">{machine.projectRef?.name ?? machine.project}</td>
                 <td className="px-3 py-2">
                   <StatusBadge status={machine.status} />
                 </td>
@@ -158,9 +185,9 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
                       className="rounded-md border px-2 py-1"
                     >
                       <option value="">Ingen ansvarlig</option>
-                      {users.map((user) => (
-                        <option key={user.id} value={user.id}>
-                          {user.name}
+                      {users.map((scopeUser) => (
+                        <option key={scopeUser.id} value={scopeUser.id}>
+                          {scopeUser.name}
                         </option>
                       ))}
                     </select>
