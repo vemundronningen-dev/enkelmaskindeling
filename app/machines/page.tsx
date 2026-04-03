@@ -1,7 +1,7 @@
 import { MachineStatus } from '@prisma/client';
 import { StatusBadge } from '@/app/components/status-badge';
 import { prisma } from '@/lib/prisma';
-import { updateMachine, updateResponsibleUser } from './actions';
+import { createMachine, updateMachine, updateResponsibleUser } from './actions';
 
 type MachinesPageProps = {
   searchParams?: {
@@ -30,7 +30,41 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
 
   return (
     <section className="space-y-6">
-      <h1 className="text-2xl font-bold">Alle maskiner</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Alle maskiner</h1>
+      </div>
+
+      <div className="rounded-xl border bg-white p-4">
+        <h2 className="mb-3 text-lg font-semibold">Opprett maskin</h2>
+        <form action={createMachine} className="grid gap-3 md:grid-cols-2">
+          <label className="text-sm font-medium">
+            Navn
+            <input name="name" className="mt-1 w-full rounded-md border px-3 py-2" placeholder="Eks. Graver 301" required />
+          </label>
+          <label className="text-sm font-medium">
+            Maskinnummer
+            <input
+              name="machineNumber"
+              className="mt-1 w-full rounded-md border px-3 py-2"
+              placeholder="Eks. M-301"
+              required
+            />
+          </label>
+          <label className="text-sm font-medium">
+            Type
+            <input name="type" className="mt-1 w-full rounded-md border px-3 py-2" placeholder="Eks. Gravemaskin" required />
+          </label>
+          <label className="text-sm font-medium">
+            Prosjekt
+            <input name="project" className="mt-1 w-full rounded-md border px-3 py-2" placeholder="Eks. Oslo Vest" required />
+          </label>
+          <div className="md:col-span-2">
+            <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+              Opprett maskin
+            </button>
+          </div>
+        </form>
+      </div>
 
       {machineToEdit && (
         <div className="rounded-xl border bg-white p-4">

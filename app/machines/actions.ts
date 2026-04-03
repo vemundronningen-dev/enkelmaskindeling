@@ -58,3 +58,25 @@ export async function updateMachine(formData: FormData) {
   revalidatePath('/available');
   revalidatePath('/users');
 }
+
+export async function createMachine(formData: FormData) {
+  const name = formData.get('name')?.toString();
+  const machineNumber = formData.get('machineNumber')?.toString();
+  const type = formData.get('type')?.toString();
+  const project = formData.get('project')?.toString();
+
+  if (!name || !machineNumber || !type || !project) return;
+
+  await prisma.machine.create({
+    data: {
+      name,
+      machineNumber,
+      type,
+      project,
+      status: MachineStatus.LEDIG
+    }
+  });
+
+  revalidatePath('/machines');
+  revalidatePath('/available');
+}
