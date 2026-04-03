@@ -42,15 +42,15 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
         <h2 className="mb-3 text-lg font-semibold">Opprett maskin</h2>
         <form action={createMachine} className="grid gap-3 md:grid-cols-2">
           <label className="text-sm font-medium">
-            Navn
-            <input name="name" className="mt-1 w-full rounded-md border px-3 py-2" placeholder="Eks. Graver 301" required />
+            Merke + modell
+            <input name="name" className="mt-1 w-full rounded-md border px-3 py-2" placeholder="Eks. Volvo EC220E" required />
           </label>
           <label className="text-sm font-medium">
-            Maskinnummer
+            Serienummer
             <input
               name="machineNumber"
               className="mt-1 w-full rounded-md border px-3 py-2"
-              placeholder="Eks. M-301"
+              placeholder="Eks. VEC220E-2024-001"
               required
             />
           </label>
@@ -76,7 +76,7 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
           <form action={updateMachine} className="grid gap-3 md:grid-cols-2">
             <input type="hidden" name="machineId" value={machineToEdit.id} />
             <label className="text-sm font-medium">
-              Navn
+              Merke + modell
               <input
                 name="name"
                 defaultValue={machineToEdit.name}
@@ -85,7 +85,7 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
               />
             </label>
             <label className="text-sm font-medium">
-              Maskinnummer
+              Serienummer
               <input
                 name="machineNumber"
                 defaultValue={machineToEdit.machineNumber}
@@ -130,8 +130,8 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
         <table className="min-w-full text-sm">
           <thead className="bg-slate-100 text-left">
             <tr>
-              <th className="px-3 py-2">Navn</th>
-              <th className="px-3 py-2">Maskinnummer</th>
+              <th className="px-3 py-2">Merke + modell</th>
+              <th className="px-3 py-2">Serienummer</th>
               <th className="px-3 py-2">Type</th>
               <th className="px-3 py-2">Prosjekt</th>
               <th className="px-3 py-2">Status</th>

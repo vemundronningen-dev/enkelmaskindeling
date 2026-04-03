@@ -16,8 +16,8 @@ export default async function AvailablePage() {
         <table className="min-w-full text-sm">
           <thead className="bg-slate-100 text-left">
             <tr>
-              <th className="px-3 py-2">Navn</th>
-              <th className="px-3 py-2">Maskinnummer</th>
+              <th className="px-3 py-2">Merke + modell</th>
+              <th className="px-3 py-2">Serienummer</th>
               <th className="px-3 py-2">Type</th>
               <th className="px-3 py-2">Prosjekt</th>
               <th className="px-3 py-2">Status</th>
