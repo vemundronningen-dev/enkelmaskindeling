@@ -14,6 +14,7 @@ export default async function UsersPage() {
     },
     orderBy: { name: 'asc' }
   });
+  const userToEdit = users.find((user) => user.id === editId);
 
   return (
     <section className="space-y-6">
@@ -52,6 +53,48 @@ export default async function UsersPage() {
           </div>
         </form>
       </div>
+      {userToEdit && (
+        <div className="rounded-xl border bg-white p-4">
+          <h2 className="mb-3 text-lg font-semibold">Rediger bruker: {userToEdit.name}</h2>
+          <form action={updateUser} className="grid gap-3 md:grid-cols-2">
+            <input type="hidden" name="userId" value={userToEdit.id} />
+            <label className="text-sm font-medium">
+              Navn
+              <input
+                name="name"
+                defaultValue={userToEdit.name}
+                className="mt-1 w-full rounded-md border px-3 py-2"
+                required
+              />
+            </label>
+            <label className="text-sm font-medium">
+              E-post
+              <input
+                type="email"
+                name="email"
+                defaultValue={userToEdit.email}
+                className="mt-1 w-full rounded-md border px-3 py-2"
+                required
+              />
+            </label>
+            <label className="text-sm font-medium">
+              Telefonnummer
+              <input
+                type="tel"
+                name="phone"
+                defaultValue={userToEdit.phone ?? ''}
+                className="mt-1 w-full rounded-md border px-3 py-2"
+                required
+              />
+            </label>
+            <div className="md:col-span-2">
+              <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+                Lagre endringer
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
       <div className="grid gap-4 md:grid-cols-2">
         {users.map((user) => (
           <article key={user.id} className="rounded-xl border bg-white p-4">
