@@ -23,16 +23,14 @@ model User {
 }
 
 model Machine {
-  id                String        @id @default(cuid())
-  machineNumber     String        @unique
-  brand             String
-  model             String
-  serialNumber      String?       @unique
-  type              String
-  project           String
-  status            MachineStatus @default(LEDIG)
-  responsibleUser   User?         @relation(fields: [responsibleUserId], references: [id])
+  id              String        @id @default(cuid())
+  name            String
+  machineNumber   String        @unique
+  type            String
+  project         String
+  status          MachineStatus @default(LEDIG)
+  responsibleUser User?         @relation(fields: [responsibleUserId], references: [id])
   responsibleUserId String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }

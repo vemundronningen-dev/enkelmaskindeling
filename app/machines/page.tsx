@@ -1,9 +1,7 @@
-export const dynamic = 'force-dynamic';
-
 import { MachineStatus } from '@prisma/client';
 import { StatusBadge } from '@/app/components/status-badge';
 import { prisma } from '@/lib/prisma';
-import { createMachine, updateMachine, updateResponsibleUser } from './actions';
+import { updateMachine, updateResponsibleUser } from './actions';
 
 type MachinesPageProps = {
   searchParams?: {
@@ -19,33 +17,14 @@ const statusOptions: { value: MachineStatus; label: string }[] = [
 
 export default async function MachinesPage({ searchParams }: MachinesPageProps) {
   const editId = searchParams?.edit;
-  let machines: {
-    id: string;
-    machineNumber: string;
-    brand: string;
-    model: string;
-    serialNumber: string | null;
-    type: string;
-    project: string;
-    status: MachineStatus;
-    responsibleUserId: string | null;
-  }[] = [];
-  let users: { id: string; name: string }[] = [];
-  let dbError: string | null = null;
 
-  try {
-    const result = await Promise.all([
-      prisma.machine.findMany({
-        orderBy: { machineNumber: 'asc' }
-      }),
-      prisma.user.findMany({ orderBy: { name: 'asc' } })
-    ]);
-
-    machines = result[0];
-    users = result[1];
-  } catch {
-    dbError = 'Databasen er ikke klar ennå. Kjør /api/setup én gang, og last siden på nytt.';
-  }
+  const [machines, users] = await Promise.all([
+    prisma.machine.findMany({
+      include: { responsibleUser: true },
+      orderBy: { machineNumber: 'asc' }
+    }),
+    prisma.user.findMany({ orderBy: { name: 'asc' } })
+  ]);
 
   const machineToEdit = machines.find((machine) => machine.id === editId);
 
@@ -53,48 +32,20 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
     <section className="space-y-6">
       <h1 className="text-2xl font-bold">Alle maskiner</h1>
 
-      {dbError && <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{dbError}</p>}
-
-      <div className="rounded-xl border bg-white p-4">
-        <h2 className="mb-3 text-lg font-semibold">Opprett ny maskin</h2>
-        <form action={createMachine} className="grid gap-3 md:grid-cols-2">
-          <label className="text-sm font-medium">
-            Maskinnummer
-            <input name="machineNumber" className="mt-1 w-full rounded-md border px-3 py-2" required />
-          </label>
-          <label className="text-sm font-medium">
-            Merke
-            <input name="brand" className="mt-1 w-full rounded-md border px-3 py-2" required />
-          </label>
-          <label className="text-sm font-medium">
-            Modell
-            <input name="model" className="mt-1 w-full rounded-md border px-3 py-2" required />
-          </label>
-          <label className="text-sm font-medium">
-            Serienummer (valgfritt)
-            <input name="serialNumber" className="mt-1 w-full rounded-md border px-3 py-2" />
-          </label>
-          <label className="text-sm font-medium">
-            Type
-            <input name="type" className="mt-1 w-full rounded-md border px-3 py-2" required />
-          </label>
-          <label className="text-sm font-medium">
-            Prosjekt
-            <input name="project" className="mt-1 w-full rounded-md border px-3 py-2" required />
-          </label>
-          <div className="md:col-span-2">
-            <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-              Opprett maskin
-            </button>
-          </div>
-        </form>
-      </div>
-
       {machineToEdit && (
         <div className="rounded-xl border bg-white p-4">
-          <h2 className="mb-3 text-lg font-semibold">Rediger maskin: {machineToEdit.machineNumber}</h2>
+          <h2 className="mb-3 text-lg font-semibold">Rediger maskin: {machineToEdit.name}</h2>
           <form action={updateMachine} className="grid gap-3 md:grid-cols-2">
             <input type="hidden" name="machineId" value={machineToEdit.id} />
+            <label className="text-sm font-medium">
+              Navn
+              <input
+                name="name"
+                defaultValue={machineToEdit.name}
+                className="mt-1 w-full rounded-md border px-3 py-2"
+                required
+              />
+            </label>
             <label className="text-sm font-medium">
               Maskinnummer
               <input
@@ -103,18 +54,6 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
                 className="mt-1 w-full rounded-md border px-3 py-2"
                 required
               />
-            </label>
-            <label className="text-sm font-medium">
-              Merke
-              <input name="brand" defaultValue={machineToEdit.brand} className="mt-1 w-full rounded-md border px-3 py-2" required />
-            </label>
-            <label className="text-sm font-medium">
-              Modell
-              <input name="model" defaultValue={machineToEdit.model} className="mt-1 w-full rounded-md border px-3 py-2" required />
-            </label>
-            <label className="text-sm font-medium">
-              Serienummer (valgfritt)
-              <input name="serialNumber" defaultValue={machineToEdit.serialNumber ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" />
             </label>
             <label className="text-sm font-medium">
               Type
@@ -152,10 +91,8 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
         <table className="min-w-full text-sm">
           <thead className="bg-slate-100 text-left">
             <tr>
+              <th className="px-3 py-2">Navn</th>
               <th className="px-3 py-2">Maskinnummer</th>
-              <th className="px-3 py-2">Merke</th>
-              <th className="px-3 py-2">Modell</th>
-              <th className="px-3 py-2">Serienummer</th>
               <th className="px-3 py-2">Type</th>
               <th className="px-3 py-2">Prosjekt</th>
               <th className="px-3 py-2">Status</th>
@@ -166,10 +103,8 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
           <tbody>
             {machines.map((machine) => (
               <tr key={machine.id} className="border-t">
+                <td className="px-3 py-2">{machine.name}</td>
                 <td className="px-3 py-2">{machine.machineNumber}</td>
-                <td className="px-3 py-2">{machine.brand}</td>
-                <td className="px-3 py-2">{machine.model}</td>
-                <td className="px-3 py-2">{machine.serialNumber ?? '-'}</td>
                 <td className="px-3 py-2">{machine.type}</td>
                 <td className="px-3 py-2">{machine.project}</td>
                 <td className="px-3 py-2">
@@ -190,7 +125,7 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
                         </option>
                       ))}
                     </select>
-                    <button type="submit" className="rounded-md border px-2 py-1 hover:bg-slate-100" disabled={users.length === 0}>
+                    <button type="submit" className="rounded-md border px-2 py-1 hover:bg-slate-100">
                       Lagre
                     </button>
                   </form>
@@ -202,13 +137,6 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
                 </td>
               </tr>
             ))}
-            {machines.length === 0 && (
-              <tr>
-                <td colSpan={9} className="px-3 py-6 text-center text-slate-500">
-                  Ingen maskiner å vise.
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>

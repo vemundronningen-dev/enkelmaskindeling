@@ -13,9 +13,6 @@ const menu = [
   { href: '/users', label: 'Brukere' }
 ];
 
-const deployVersion = process.env.NEXT_PUBLIC_APP_VERSION ?? 'lokal';
-const commitSha = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? 'ukjent';
-
 export default function RootLayout({
   children
 }: Readonly<{
@@ -41,9 +38,6 @@ export default function RootLayout({
           </nav>
         </header>
         <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
-        <footer className="mx-auto max-w-6xl px-4 pb-6 text-xs text-slate-500">
-          Deploy-versjon: {deployVersion} · Commit: {commitSha}
-        </footer>
       </body>
     </html>
   );
