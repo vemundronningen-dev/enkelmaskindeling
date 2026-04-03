@@ -1,5 +1,6 @@
 import { MachineStatus } from '@prisma/client';
 import { StatusBadge } from '@/app/components/status-badge';
+import { ensureDatabaseSetup } from '@/lib/db-init';
 import { prisma } from '@/lib/prisma';
 import { createMachine, updateMachine, updateResponsibleUser } from './actions';
 
@@ -19,14 +20,14 @@ export const dynamic = 'force-dynamic';
 
 export default async function MachinesPage({ searchParams }: MachinesPageProps) {
   const editId = searchParams?.edit;
+  await ensureDatabaseSetup();
 
-  const [machines, users, projects] = await Promise.all([
+  const [machines, users] = await Promise.all([
     prisma.machine.findMany({
       include: { responsibleUser: true },
       orderBy: { machineNumber: 'asc' }
     }),
-    prisma.user.findMany({ orderBy: { name: 'asc' } }),
-    prisma.project.findMany({ orderBy: { name: 'asc' } })
+    prisma.user.findMany({ orderBy: { name: 'asc' } })
   ]);
 
   const machineToEdit = machines.find((machine) => machine.id === editId);
@@ -41,15 +42,15 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
         <h2 className="mb-3 text-lg font-semibold">Opprett maskin</h2>
         <form action={createMachine} className="grid gap-3 md:grid-cols-2">
           <label className="text-sm font-medium">
-            Navn
-            <input name="name" className="mt-1 w-full rounded-md border px-3 py-2" placeholder="Eks. Graver 301" required />
+            Merke + modell
+            <input name="name" className="mt-1 w-full rounded-md border px-3 py-2" placeholder="Eks. Volvo EC220E" required />
           </label>
           <label className="text-sm font-medium">
-            Maskinnummer
+            Serienummer
             <input
               name="machineNumber"
               className="mt-1 w-full rounded-md border px-3 py-2"
-              placeholder="Eks. M-301"
+              placeholder="Eks. VEC220E-2024-001"
               required
             />
           </label>
@@ -59,26 +60,10 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
           </label>
           <label className="text-sm font-medium">
             Prosjekt
-            <select name="project" className="mt-1 w-full rounded-md border px-3 py-2" required>
-              <option value="">Velg prosjekt</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.name}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
+            <input name="project" className="mt-1 w-full rounded-md border px-3 py-2" placeholder="Eks. E6 Nord" required />
           </label>
           <div className="md:col-span-2">
-            {projects.length === 0 ? (
-              <p className="text-sm text-amber-700">Opprett minst ett prosjekt først før du oppretter maskiner.</p>
-            ) : null}
-          </div>
-          <div className="md:col-span-2">
-            <button
-              type="submit"
-              disabled={projects.length === 0}
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
+            <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
               Opprett maskin
             </button>
           </div>
@@ -91,7 +76,7 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
           <form action={updateMachine} className="grid gap-3 md:grid-cols-2">
             <input type="hidden" name="machineId" value={machineToEdit.id} />
             <label className="text-sm font-medium">
-              Navn
+              Merke + modell
               <input
                 name="name"
                 defaultValue={machineToEdit.name}
@@ -100,7 +85,7 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
               />
             </label>
             <label className="text-sm font-medium">
-              Maskinnummer
+              Serienummer
               <input
                 name="machineNumber"
                 defaultValue={machineToEdit.machineNumber}
@@ -114,19 +99,13 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
             </label>
             <label className="text-sm font-medium">
               Prosjekt
-              <select
+              <input
                 name="project"
                 defaultValue={machineToEdit.project}
                 className="mt-1 w-full rounded-md border px-3 py-2"
+                placeholder="Eks. E6 Nord"
                 required
-              >
-                <option value="">Velg prosjekt</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.name}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
+              />
             </label>
             <label className="text-sm font-medium md:col-span-2">
               Status
@@ -151,8 +130,8 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
         <table className="min-w-full text-sm">
           <thead className="bg-slate-100 text-left">
             <tr>
-              <th className="px-3 py-2">Navn</th>
-              <th className="px-3 py-2">Maskinnummer</th>
+              <th className="px-3 py-2">Merke + modell</th>
+              <th className="px-3 py-2">Serienummer</th>
               <th className="px-3 py-2">Type</th>
               <th className="px-3 py-2">Prosjekt</th>
               <th className="px-3 py-2">Status</th>
