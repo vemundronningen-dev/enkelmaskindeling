@@ -32,6 +32,16 @@ export default async function UsersPage() {
               required
             />
           </label>
+          <label className="text-sm font-medium">
+            Telefonnummer
+            <input
+              type="tel"
+              name="phone"
+              className="mt-1 w-full rounded-md border px-3 py-2"
+              placeholder="Eks. +47 900 00 000"
+              required
+            />
+          </label>
           <div className="md:col-span-2">
             <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
               Opprett bruker
@@ -44,6 +54,7 @@ export default async function UsersPage() {
           <article key={user.id} className="rounded-xl border bg-white p-4">
             <h2 className="text-lg font-semibold">{user.name}</h2>
             <p className="text-sm text-slate-600">{user.email}</p>
+            <p className="text-sm text-slate-600">{user.phone ?? 'Telefonnummer mangler'}</p>
             <div className="mt-3">
               <h3 className="text-sm font-medium">Ansvarlige maskiner</h3>
               {user.machines.length > 0 ? (
