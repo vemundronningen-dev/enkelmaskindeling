@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic';
-
 import { MachineStatus } from '@prisma/client';
 import { StatusBadge } from '@/app/components/status-badge';
 import { prisma } from '@/lib/prisma';
