@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 async function main() {
   await prisma.machine.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.project.deleteMany();
 
   const users = await prisma.user.createManyAndReturn({
     data: [
@@ -14,6 +15,12 @@ async function main() {
       { name: 'Anne Nilsen', email: 'anne@example.com' },
       { name: 'Mina Johansen', email: 'mina@example.com' }
     ]
+  });
+
+  const projectNames = ['E6 Nord', 'Havn Vest', 'Tunnel Sør', 'Asfalt Øst', 'Bygg Sentrum', 'Skole Vest'];
+
+  await prisma.project.createMany({
+    data: projectNames.map((name) => ({ name }))
   });
 
   await prisma.machine.createMany({
