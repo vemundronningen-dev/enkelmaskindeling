@@ -1,5 +1,6 @@
 import { MachineStatus } from '@prisma/client';
 import { StatusBadge } from '@/app/components/status-badge';
+import { ensureDatabaseSetup } from '@/lib/db-init';
 import { prisma } from '@/lib/prisma';
 import { createMachine, updateMachine, updateResponsibleUser } from './actions';
 
@@ -19,6 +20,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function MachinesPage({ searchParams }: MachinesPageProps) {
   const editId = searchParams?.edit;
+  await ensureDatabaseSetup();
 
   const [machines, users] = await Promise.all([
     prisma.machine.findMany({

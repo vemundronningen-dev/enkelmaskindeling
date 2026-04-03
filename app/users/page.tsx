@@ -1,8 +1,11 @@
 import { prisma } from '@/lib/prisma';
+import { ensureDatabaseSetup } from '@/lib/db-init';
 import { createUser } from './actions';
 export const dynamic = 'force-dynamic';
 
 export default async function UsersPage() {
+  await ensureDatabaseSetup();
+
   const users = await prisma.user.findMany({
     include: {
       machines: {
