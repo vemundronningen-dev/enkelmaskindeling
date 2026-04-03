@@ -24,26 +24,3 @@ export async function createUser(formData: FormData) {
   revalidatePath('/users');
   revalidatePath('/machines');
 }
-
-export async function updateUser(formData: FormData) {
-  await ensureDatabaseSetup();
-
-  const userId = formData.get('userId')?.toString();
-  const name = formData.get('name')?.toString();
-  const email = formData.get('email')?.toString();
-  const phone = formData.get('phone')?.toString();
-
-  if (!userId || !name || !email || !phone) return;
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      name,
-      email,
-      phone
-    }
-  });
-
-  revalidatePath('/users');
-  revalidatePath('/machines');
-}

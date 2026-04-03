@@ -1,17 +1,10 @@
 import { prisma } from '@/lib/prisma';
 import { ensureDatabaseSetup } from '@/lib/db-init';
-import { createUser, updateUser } from './actions';
+import { createUser } from './actions';
 export const dynamic = 'force-dynamic';
 
-type UsersPageProps = {
-  searchParams?: {
-    edit?: string;
-  };
-};
-
-export default async function UsersPage({ searchParams }: UsersPageProps) {
+export default async function UsersPage() {
   await ensureDatabaseSetup();
-  const editId = searchParams?.edit;
 
   const users = await prisma.user.findMany({
     include: {
@@ -108,11 +101,6 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
             <h2 className="text-lg font-semibold">{user.name}</h2>
             <p className="text-sm text-slate-600">{user.email}</p>
             <p className="text-sm text-slate-600">{user.phone ?? 'Telefonnummer mangler'}</p>
-            <div className="mt-3">
-              <a href={`/users?edit=${user.id}`} className="rounded-md border px-2 py-1 text-sm hover:bg-slate-100">
-                Rediger bruker
-              </a>
-            </div>
             <div className="mt-3">
               <h3 className="text-sm font-medium">Ansvarlige maskiner</h3>
               {user.machines.length > 0 ? (
