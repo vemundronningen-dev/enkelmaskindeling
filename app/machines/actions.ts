@@ -38,12 +38,8 @@ export async function updateMachine(formData: FormData) {
 
   if (!machineId || !name || !machineNumber || !type || !project || !status) return;
 
-  const [existing, selectedProject] = await Promise.all([
-    prisma.machine.findUnique({ where: { id: machineId } }),
-    prisma.project.findUnique({ where: { name: project } })
-  ]);
-
-  if (!existing || !selectedProject) return;
+  const existing = await prisma.machine.findUnique({ where: { id: machineId } });
+  if (!existing) return;
 
   const safeStatus = existing.responsibleUserId && status === MachineStatus.LEDIG ? MachineStatus.TILDELT : status;
 
@@ -61,7 +57,6 @@ export async function updateMachine(formData: FormData) {
   revalidatePath('/machines');
   revalidatePath('/available');
   revalidatePath('/users');
-  revalidatePath('/projects');
 }
 
 export async function createMachine(formData: FormData) {
@@ -71,9 +66,6 @@ export async function createMachine(formData: FormData) {
   const project = formData.get('project')?.toString();
 
   if (!name || !machineNumber || !type || !project) return;
-
-  const selectedProject = await prisma.project.findUnique({ where: { name: project } });
-  if (!selectedProject) return;
 
   await prisma.machine.create({
     data: {
@@ -87,5 +79,4 @@ export async function createMachine(formData: FormData) {
 
   revalidatePath('/machines');
   revalidatePath('/available');
-  revalidatePath('/projects');
 }
