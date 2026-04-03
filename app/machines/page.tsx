@@ -20,13 +20,12 @@ export const dynamic = 'force-dynamic';
 export default async function MachinesPage({ searchParams }: MachinesPageProps) {
   const editId = searchParams?.edit;
 
-  const [machines, users, projects] = await Promise.all([
+  const [machines, users] = await Promise.all([
     prisma.machine.findMany({
       include: { responsibleUser: true },
       orderBy: { machineNumber: 'asc' }
     }),
-    prisma.user.findMany({ orderBy: { name: 'asc' } }),
-    prisma.project.findMany({ orderBy: { name: 'asc' } })
+    prisma.user.findMany({ orderBy: { name: 'asc' } })
   ]);
 
   const machineToEdit = machines.find((machine) => machine.id === editId);
@@ -59,26 +58,10 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
           </label>
           <label className="text-sm font-medium">
             Prosjekt
-            <select name="project" className="mt-1 w-full rounded-md border px-3 py-2" required>
-              <option value="">Velg prosjekt</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.name}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
+            <input name="project" className="mt-1 w-full rounded-md border px-3 py-2" placeholder="Eks. E6 Nord" required />
           </label>
           <div className="md:col-span-2">
-            {projects.length === 0 ? (
-              <p className="text-sm text-amber-700">Opprett minst ett prosjekt først før du oppretter maskiner.</p>
-            ) : null}
-          </div>
-          <div className="md:col-span-2">
-            <button
-              type="submit"
-              disabled={projects.length === 0}
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-            >
+            <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
               Opprett maskin
             </button>
           </div>
@@ -114,19 +97,13 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
             </label>
             <label className="text-sm font-medium">
               Prosjekt
-              <select
+              <input
                 name="project"
                 defaultValue={machineToEdit.project}
                 className="mt-1 w-full rounded-md border px-3 py-2"
+                placeholder="Eks. E6 Nord"
                 required
-              >
-                <option value="">Velg prosjekt</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.name}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
+              />
             </label>
             <label className="text-sm font-medium md:col-span-2">
               Status
