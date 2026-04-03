@@ -1,23 +1,27 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { ensureDatabaseSetup } from '@/lib/db-init';
+import { requireAdmin } from '@/lib/auth';
+import { hashPassword } from '@/lib/password';
 import { prisma } from '@/lib/prisma';
 
 export async function createUser(formData: FormData) {
-  await ensureDatabaseSetup();
+  const currentUser = await requireAdmin();
 
   const name = formData.get('name')?.toString();
-  const email = formData.get('email')?.toString();
-  const phone = formData.get('phone')?.toString();
+  const email = formData.get('email')?.toString().toLowerCase();
+  const phone = formData.get('phone')?.toString() || null;
+  const password = formData.get('password')?.toString() ?? 'Passord123!';
 
-  if (!name || !email || !phone) return;
+  if (!name || !email) return;
 
   await prisma.user.create({
     data: {
       name,
       email,
-      phone
+      phone,
+      passwordHash: hashPassword(password),
+      companyId: currentUser.companyId
     }
   });
 
