@@ -15,6 +15,8 @@ const statusOptions: { value: MachineStatus; label: string }[] = [
   { value: MachineStatus.SERVICE, label: 'Service' }
 ];
 
+export const dynamic = 'force-dynamic';
+
 export default async function MachinesPage({ searchParams }: MachinesPageProps) {
   const editId = searchParams?.edit;
 

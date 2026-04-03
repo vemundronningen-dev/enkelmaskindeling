@@ -16,6 +16,7 @@ async function main() {
     ]
   });
 
+
   await prisma.machine.createMany({
     data: [
       { name: 'Gravemaskin A', machineNumber: 'M-1001', type: 'Gravemaskin', project: 'E6 Nord', status: MachineStatus.LEDIG },
