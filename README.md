@@ -17,6 +17,7 @@ Veldig enkel webapp for maskiner og brukere.
   - ansvarlig bruker fjernet -> **Ledig**
 - `/available` viser kun maskiner med status **Ledig**
 - `/users` viser alle brukere og maskiner de er ansvarlig for
+- `/projects` lar deg opprette prosjekter og se hvilke maskiner som er på hvert prosjekt
 
 ## 1) Enkel lokal oppstart
 
@@ -71,5 +72,6 @@ Det gjør den enkel å teste, enkel å forstå, og enkel å bytte til ekte innlo
 - `app/machines` - maskinliste + redigering + ansvarlig bruker
 - `app/available` - ledige maskiner
 - `app/users` - brukerliste
+- `app/projects` - prosjektliste + opprett prosjekt
 - `prisma/schema.prisma` - datamodell
 - `prisma/seed.ts` - demo-data

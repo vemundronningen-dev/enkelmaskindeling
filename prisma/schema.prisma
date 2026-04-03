@@ -22,15 +22,22 @@ model User {
   updatedAt DateTime  @updatedAt
 }
 
+model Project {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Machine {
-  id              String        @id @default(cuid())
-  name            String
-  machineNumber   String        @unique
-  type            String
-  project         String
-  status          MachineStatus @default(LEDIG)
-  responsibleUser User?         @relation(fields: [responsibleUserId], references: [id])
+  id                String        @id @default(cuid())
+  name              String
+  machineNumber     String        @unique
+  type              String
+  project           String
+  status            MachineStatus @default(LEDIG)
+  responsibleUser   User?         @relation(fields: [responsibleUserId], references: [id])
   responsibleUserId String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 }
