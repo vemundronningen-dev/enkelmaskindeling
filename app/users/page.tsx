@@ -6,7 +6,11 @@ import { requireUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-export default async function UsersPage() {
+export default async function UsersPage({
+  searchParams
+}: {
+  searchParams?: { error?: string; success?: string };
+}) {
   await ensureDatabaseSetup();
   const currentUser = await requireUser();
 
@@ -25,6 +29,8 @@ export default async function UsersPage() {
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-bold">Brukere</h1>
+      {searchParams?.error && <p className="rounded-md bg-red-50 p-2 text-sm text-red-700">{searchParams.error}</p>}
+      {searchParams?.success && <p className="rounded-md bg-green-50 p-2 text-sm text-green-700">{searchParams.success}</p>}
       <div className="rounded-xl border bg-white p-4">
         <h2 className="mb-3 text-lg font-semibold">Opprett enkel bruker</h2>
         <form action={createUser} className="grid gap-3 md:grid-cols-2">

@@ -1,5 +1,6 @@
 'use server';
 
+import { Prisma } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { hashPassword } from '@/lib/password';
@@ -23,8 +24,11 @@ export async function createUser(formData: FormData) {
       passwordHash: hashPassword(password),
       companyId: currentUser.companyId
     }
-  });
+
+    throw error;
+  }
 
   revalidatePath('/users');
   revalidatePath('/machines');
+  redirect('/users?success=Bruker+opprettet');
 }
