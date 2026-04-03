@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { createUser } from './actions';
+export const dynamic = 'force-dynamic';
 
 export default async function UsersPage() {
   const users = await prisma.user.findMany({

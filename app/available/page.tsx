@@ -1,6 +1,7 @@
 import { MachineStatus } from '@prisma/client';
 import { StatusBadge } from '@/app/components/status-badge';
 import { prisma } from '@/lib/prisma';
+export const dynamic = 'force-dynamic';
 
 export default async function AvailablePage() {
   const machines = await prisma.machine.findMany({
