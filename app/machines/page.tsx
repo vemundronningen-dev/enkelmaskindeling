@@ -1,5 +1,3 @@
-export const dynamic = 'force-dynamic';
-
 import { MachineStatus } from '@prisma/client';
 import { StatusBadge } from '@/app/components/status-badge';
 import { prisma } from '@/lib/prisma';
@@ -19,41 +17,20 @@ const statusOptions: { value: MachineStatus; label: string }[] = [
 
 export default async function MachinesPage({ searchParams }: MachinesPageProps) {
   const editId = searchParams?.edit;
-  let machines: {
-    id: string;
-    name: string;
-    machineNumber: string;
-    type: string;
-    project: string;
-    status: MachineStatus;
-    responsibleUserId: string | null;
-    responsibleUser: { id: string; name: string } | null;
-  }[] = [];
-  let users: { id: string; name: string }[] = [];
-  let dbError: string | null = null;
 
-  try {
-    const result = await Promise.all([
-      prisma.machine.findMany({
-        include: { responsibleUser: true },
-        orderBy: { machineNumber: 'asc' }
-      }),
-      prisma.user.findMany({ orderBy: { name: 'asc' } })
-    ]);
-
-    machines = result[0];
-    users = result[1];
-  } catch {
-    dbError = 'Databasen er ikke klar ennå. Kjør /api/setup én gang, og last siden på nytt.';
-  }
+  const [machines, users] = await Promise.all([
+    prisma.machine.findMany({
+      include: { responsibleUser: true },
+      orderBy: { machineNumber: 'asc' }
+    }),
+    prisma.user.findMany({ orderBy: { name: 'asc' } })
+  ]);
 
   const machineToEdit = machines.find((machine) => machine.id === editId);
 
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-bold">Alle maskiner</h1>
-
-      {dbError && <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{dbError}</p>}
 
       {machineToEdit && (
         <div className="rounded-xl border bg-white p-4">
@@ -148,7 +125,7 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
                         </option>
                       ))}
                     </select>
-                    <button type="submit" className="rounded-md border px-2 py-1 hover:bg-slate-100" disabled={users.length === 0}>
+                    <button type="submit" className="rounded-md border px-2 py-1 hover:bg-slate-100">
                       Lagre
                     </button>
                   </form>
@@ -160,13 +137,6 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
                 </td>
               </tr>
             ))}
-            {machines.length === 0 && (
-              <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-slate-500">
-                  Ingen maskiner å vise.
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>

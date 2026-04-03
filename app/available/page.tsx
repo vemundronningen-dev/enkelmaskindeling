@@ -1,35 +1,16 @@
-export const dynamic = 'force-dynamic';
-
 import { MachineStatus } from '@prisma/client';
 import { StatusBadge } from '@/app/components/status-badge';
 import { prisma } from '@/lib/prisma';
 
 export default async function AvailablePage() {
-  let machines: {
-    id: string;
-    name: string;
-    machineNumber: string;
-    type: string;
-    project: string;
-    status: MachineStatus;
-  }[] = [];
-  let dbError: string | null = null;
-
-  try {
-    machines = await prisma.machine.findMany({
-      where: { status: MachineStatus.LEDIG },
-      orderBy: { machineNumber: 'asc' }
-    });
-  } catch {
-    dbError = 'Databasen er ikke klar ennå. Kjør /api/setup én gang, og last siden på nytt.';
-  }
+  const machines = await prisma.machine.findMany({
+    where: { status: MachineStatus.LEDIG },
+    orderBy: { machineNumber: 'asc' }
+  });
 
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-bold">Ledige maskiner</h1>
-
-      {dbError && <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{dbError}</p>}
-
       <div className="overflow-x-auto rounded-xl border bg-white">
         <table className="min-w-full text-sm">
           <thead className="bg-slate-100 text-left">
@@ -53,13 +34,6 @@ export default async function AvailablePage() {
                 </td>
               </tr>
             ))}
-            {machines.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-slate-500">
-                  Ingen ledige maskiner å vise.
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>

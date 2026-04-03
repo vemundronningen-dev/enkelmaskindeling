@@ -1,35 +1,18 @@
-export const dynamic = 'force-dynamic';
-
 import { prisma } from '@/lib/prisma';
 
 export default async function UsersPage() {
-  let users: {
-    id: string;
-    name: string;
-    email: string;
-    machines: { id: string; name: string; machineNumber: string }[];
-  }[] = [];
-  let dbError: string | null = null;
-
-  try {
-    users = await prisma.user.findMany({
-      include: {
-        machines: {
-          orderBy: { machineNumber: 'asc' }
-        }
-      },
-      orderBy: { name: 'asc' }
-    });
-  } catch {
-    dbError = 'Databasen er ikke klar ennå. Kjør /api/setup én gang, og last siden på nytt.';
-  }
+  const users = await prisma.user.findMany({
+    include: {
+      machines: {
+        orderBy: { machineNumber: 'asc' }
+      }
+    },
+    orderBy: { name: 'asc' }
+  });
 
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-bold">Brukere</h1>
-
-      {dbError && <p className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">{dbError}</p>}
-
       <div className="grid gap-4 md:grid-cols-2">
         {users.map((user) => (
           <article key={user.id} className="rounded-xl border bg-white p-4">
@@ -52,10 +35,6 @@ export default async function UsersPage() {
           </article>
         ))}
       </div>
-
-      {users.length === 0 && !dbError && (
-        <p className="rounded-md border bg-white p-3 text-sm text-slate-600">Ingen brukere funnet.</p>
-      )}
     </section>
   );
 }
