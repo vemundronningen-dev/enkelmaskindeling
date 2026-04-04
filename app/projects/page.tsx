@@ -8,15 +8,17 @@ export const dynamic = 'force-dynamic';
 type ProjectsPageProps = {
   searchParams?: {
     edit?: string;
+    projectId?: string;
   };
 };
 
 export default async function ProjectsPage({ searchParams }: ProjectsPageProps) {
   const user = await requireUser();
+  const selectedProjectId = searchParams?.projectId;
 
   const projectScopeWhere = { companyId: user.companyId };
 
-  const [projects, departments] = await Promise.all([
+  const [projects, departments, machines] = await Promise.all([
     prisma.project.findMany({
       where: projectScopeWhere,
       include: {
@@ -31,6 +33,17 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
     prisma.department.findMany({
       where: { companyId: user.companyId },
       orderBy: { name: 'asc' }
+    }),
+    prisma.machine.findMany({
+      where: {
+        companyId: user.companyId,
+        ...(selectedProjectId ? { projectId: selectedProjectId } : {})
+      },
+      include: {
+        projectRef: true,
+        responsibleUser: true
+      },
+      orderBy: [{ project: 'asc' }, { machineNumber: 'asc' }]
     })
   ]);
 
@@ -134,6 +147,86 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="rounded-xl border bg-white p-4">
+        <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <h2 className="text-lg font-semibold">Maskinoversikt per prosjekt</h2>
+          <form method="GET" className="flex flex-col gap-2 md:flex-row md:items-end">
+            <label className="text-sm font-medium">
+              Filtrer prosjekt
+              <select
+                name="projectId"
+                defaultValue={selectedProjectId ?? ''}
+                className="mt-1 block w-full rounded-md border px-3 py-2 md:min-w-64"
+              >
+                <option value="">Alle prosjekter</option>
+                {projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-slate-100">Filtrer</button>
+            {selectedProjectId && (
+              <a href="/projects" className="rounded-md border px-4 py-2 text-sm font-medium hover:bg-slate-100">
+                Nullstill
+              </a>
+            )}
+          </form>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-slate-100 text-left">
+              <tr>
+                <th className="px-3 py-2">Prosjekt</th>
+                <th className="px-3 py-2">Maskin</th>
+                <th className="px-3 py-2">Serienummer</th>
+                <th className="px-3 py-2">Type</th>
+                <th className="px-3 py-2">Ansvarlig</th>
+                <th className="px-3 py-2">Kontaktinfo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {machines.map((machine) => (
+                <tr key={machine.id} className="border-t">
+                  <td className="px-3 py-2">{machine.projectRef?.name ?? 'Ikke satt'}</td>
+                  <td className="px-3 py-2">{machine.name}</td>
+                  <td className="px-3 py-2">{machine.machineNumber}</td>
+                  <td className="px-3 py-2">{machine.type}</td>
+                  <td className="px-3 py-2">{machine.responsibleUser?.name ?? 'Ingen ansvarlig'}</td>
+                  <td className="px-3 py-2">
+                    {machine.responsibleUser ? (
+                      <div className="flex flex-col gap-1">
+                        {machine.responsibleUser.phone ? (
+                          <a href={`tel:${machine.responsibleUser.phone}`} className="text-blue-700 hover:underline">
+                            {machine.responsibleUser.phone}
+                          </a>
+                        ) : (
+                          <span>Telefon mangler</span>
+                        )}
+                        <a href={`mailto:${machine.responsibleUser.email}`} className="text-blue-700 hover:underline">
+                          {machine.responsibleUser.email}
+                        </a>
+                      </div>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {machines.length === 0 && (
+                <tr className="border-t">
+                  <td className="px-3 py-4 text-slate-500" colSpan={6}>
+                    Ingen maskiner matcher filtreringen.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   );
