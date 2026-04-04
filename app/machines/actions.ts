@@ -1,18 +1,13 @@
 'use server';
 
-import { MachineStatus, UserRole } from '@prisma/client';
+import { MachineStatus } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { requireUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 function scopedMachineWhere(user: Awaited<ReturnType<typeof requireUser>>) {
-  if (user.role === UserRole.SUPERADMIN) return {};
-
   return {
-    companyId: user.companyId,
-    projectRef: {
-      ...(user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId ? { departmentId: user.departmentId } : {})
-    }
+    companyId: user.companyId
   };
 }
 
@@ -25,6 +20,10 @@ export async function updateResponsibleUser(formData: FormData) {
 
   const machine = await prisma.machine.findFirst({ where: { id: machineId, ...scopedMachineWhere(user) } });
   if (!machine) return;
+  if (userId) {
+    const responsibleUser = await prisma.user.findFirst({ where: { id: userId, companyId: user.companyId } });
+    if (!responsibleUser) return;
+  }
 
   const nextStatus = userId ? MachineStatus.TILDELT : MachineStatus.LEDIG;
 
@@ -57,6 +56,7 @@ export async function updateMachine(formData: FormData) {
 
   const project = await prisma.project.findUnique({ where: { id: projectId } });
   if (!project) return;
+  if (project.companyId !== user.companyId) return;
 
   const safeStatus = existing.responsibleUserId && status === MachineStatus.LEDIG ? MachineStatus.TILDELT : status;
 
@@ -90,14 +90,10 @@ export async function updateMachineProject(formData: FormData) {
   if (!machine) return;
 
   const project = await prisma.project.findFirst({
-    where:
-      user.role === UserRole.SUPERADMIN
-        ? { id: projectId }
-        : {
-            id: projectId,
-            companyId: user.companyId,
-            ...(user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId ? { departmentId: user.departmentId } : {})
-          }
+    where: {
+      id: projectId,
+      companyId: user.companyId
+    }
   });
 
   if (!project) return;
@@ -127,8 +123,7 @@ export async function createMachine(formData: FormData) {
 
   const project = await prisma.project.findUnique({ where: { id: projectId } });
   if (!project) return;
-  if (user.role !== UserRole.SUPERADMIN && project.companyId !== user.companyId) return;
-  if (user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId !== project.departmentId) return;
+  if (project.companyId !== user.companyId) return;
 
   await prisma.machine.create({
     data: {

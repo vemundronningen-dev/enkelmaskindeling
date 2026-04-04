@@ -1,4 +1,4 @@
-import { MachineStatus, UserRole } from '@prisma/client';
+import { MachineStatus } from '@prisma/client';
 import { StatusBadge } from '@/app/components/status-badge';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/auth';
@@ -11,16 +11,7 @@ export default async function AvailablePage() {
   const machines = await prisma.machine.findMany({
     where: {
       status: MachineStatus.LEDIG,
-      ...(currentUser.role === UserRole.SUPERADMIN
-        ? {}
-        : {
-            projectRef: {
-              companyId: currentUser.companyId ?? undefined,
-              ...(currentUser.role === UserRole.DEPARTMENT_MANAGER && currentUser.departmentId
-                ? { departmentId: currentUser.departmentId }
-                : {})
-            }
-          })
+      companyId: currentUser.companyId
     },
     include: { projectRef: true },
     orderBy: { machineNumber: 'asc' }

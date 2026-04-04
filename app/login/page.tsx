@@ -34,7 +34,7 @@ export default async function LoginPage({
         </button>
       </form>
       <div className="rounded-md bg-slate-50 p-3 text-xs text-slate-600">
-        Demo admin: <strong>admin@maskin.no</strong> / <strong>Admin123!</strong>
+        Demo admin: <strong>admin@demo.no</strong> / <strong>Admin123!</strong>
       </div>
     </section>
   );

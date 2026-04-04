@@ -1,4 +1,3 @@
-import { UserRole } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { ensureDatabaseSetup } from '@/lib/db-init';
 import { createUser } from './actions';
@@ -15,7 +14,7 @@ export default async function UsersPage({
   const currentUser = await requireUser();
 
   const users = await prisma.user.findMany({
-    where: currentUser.role === UserRole.SUPERADMIN ? {} : { companyId: currentUser.companyId ?? undefined },
+    where: { companyId: currentUser.companyId },
     include: {
       company: true,
       department: true,

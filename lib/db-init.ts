@@ -10,11 +10,12 @@ export async function ensureDatabaseSetup() {
         CREATE TYPE "MachineStatus" AS ENUM ('LEDIG', 'TILDELT', 'SERVICE');
       END IF;
       IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'UserRole') THEN
-        CREATE TYPE "UserRole" AS ENUM ('SUPERADMIN', 'COMPANY_ADMIN', 'DEPARTMENT_MANAGER', 'USER');
+        CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'USER');
       END IF;
     END
     $$;
   `);
+  await prisma.$executeRawUnsafe(`ALTER TYPE "UserRole" ADD VALUE IF NOT EXISTS 'ADMIN';`);
 
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS "Company" (
@@ -121,6 +122,11 @@ export async function ensureDatabaseSetup() {
     SET "companyId" = ${defaultCompany.id}
     WHERE "companyId" IS NULL;
   `;
+  await prisma.$executeRawUnsafe(`
+    UPDATE "User"
+    SET "role" = 'ADMIN'::"UserRole"
+    WHERE "role"::text IN ('SUPERADMIN', 'COMPANY_ADMIN', 'DEPARTMENT_MANAGER');
+  `);
 
   await prisma.$executeRawUnsafe(`
     UPDATE "Machine" m
@@ -184,60 +190,36 @@ export async function ensureDatabaseSetup() {
 
   let seeded = false;
 
-  const adminEmail = 'admin@maskin.no';
+  const adminEmail = 'admin@demo.no';
   const adminExists = await prisma.user.findUnique({ where: { email: adminEmail } });
 
-  const oslo = await prisma.company.upsert({
-    where: { name: 'Oslo kommune' },
-    create: { name: 'Oslo kommune', orgNumber: '958935420' },
-    update: { orgNumber: '958935420' }
+  const demoCompany = await prisma.company.upsert({
+    where: { name: 'Demo Entreprenør AS' },
+    create: { name: 'Demo Entreprenør AS', orgNumber: '999888777' },
+    update: { orgNumber: '999888777' }
   });
 
-  const af = await prisma.company.upsert({
-    where: { name: 'AF Gruppen' },
-    create: { name: 'AF Gruppen', orgNumber: '983457747' },
-    update: { orgNumber: '983457747' }
-  });
-
-  const vann = await prisma.department.upsert({
-    where: { companyId_name: { companyId: oslo.id, name: 'Vann- og avløpsetaten' } },
-    create: { name: 'Vann- og avløpsetaten', companyId: oslo.id },
+  const anlegg = await prisma.department.upsert({
+    where: { companyId_name: { companyId: demoCompany.id, name: 'Anlegg' } },
+    create: { name: 'Anlegg', companyId: demoCompany.id },
     update: {}
   });
 
-  const energi = await prisma.department.upsert({
-    where: { companyId_name: { companyId: oslo.id, name: 'Eiendom og energi' } },
-    create: { name: 'Eiendom og energi', companyId: oslo.id },
+  const service = await prisma.department.upsert({
+    where: { companyId_name: { companyId: demoCompany.id, name: 'Service' } },
+    create: { name: 'Service', companyId: demoCompany.id },
     update: {}
   });
 
-  const afDept = await prisma.department.upsert({
-    where: { companyId_name: { companyId: af.id, name: 'Prosjektadministrasjon' } },
-    create: { name: 'Prosjektadministrasjon', companyId: af.id },
+  const prosjektNord = await prisma.project.upsert({
+    where: { companyId_name: { companyId: demoCompany.id, name: 'Prosjekt Nord' } },
+    create: { name: 'Prosjekt Nord', companyId: demoCompany.id, departmentId: anlegg.id },
     update: {}
   });
 
-  const e1 = await prisma.project.upsert({
-    where: { companyId_name: { companyId: af.id, name: 'E1 Vannbehandlingsanlegg' } },
-    create: { name: 'E1 Vannbehandlingsanlegg', companyId: af.id, departmentId: afDept.id },
-    update: {}
-  });
-
-  const rkv = await prisma.project.upsert({
-    where: { companyId_name: { companyId: af.id, name: 'RKV Regjeringskvartalet energiforsyning' } },
-    create: { name: 'RKV Regjeringskvartalet energiforsyning', companyId: af.id, departmentId: afDept.id },
-    update: {}
-  });
-
-  await prisma.project.upsert({
-    where: { companyId_name: { companyId: oslo.id, name: 'Vannnett Sentrum' } },
-    create: { name: 'Vannnett Sentrum', companyId: oslo.id, departmentId: vann.id },
-    update: {}
-  });
-
-  await prisma.project.upsert({
-    where: { companyId_name: { companyId: oslo.id, name: 'Energieffektivisering Rådhuset' } },
-    create: { name: 'Energieffektivisering Rådhuset', companyId: oslo.id, departmentId: energi.id },
+  const prosjektSyd = await prisma.project.upsert({
+    where: { companyId_name: { companyId: demoCompany.id, name: 'Prosjekt Syd' } },
+    create: { name: 'Prosjekt Syd', companyId: demoCompany.id, departmentId: service.id },
     update: {}
   });
 
@@ -248,22 +230,49 @@ export async function ensureDatabaseSetup() {
         email: adminEmail,
         phone: '+47 900 00 999',
         passwordHash: hashPassword('Admin123!'),
-        role: UserRole.SUPERADMIN,
-        companyId: oslo.id
+        role: UserRole.ADMIN,
+        companyId: demoCompany.id
       }
     });
     seeded = true;
   }
+
+  await prisma.user.upsert({
+    where: { email: 'bruker1@demo.no' },
+    create: {
+      name: 'Vanlig Bruker 1',
+      email: 'bruker1@demo.no',
+      phone: '+47 900 00 001',
+      passwordHash: hashPassword('Passord123!'),
+      role: UserRole.USER,
+      companyId: demoCompany.id,
+      departmentId: anlegg.id
+    },
+    update: {}
+  });
+  await prisma.user.upsert({
+    where: { email: 'bruker2@demo.no' },
+    create: {
+      name: 'Vanlig Bruker 2',
+      email: 'bruker2@demo.no',
+      phone: '+47 900 00 002',
+      passwordHash: hashPassword('Passord123!'),
+      role: UserRole.USER,
+      companyId: demoCompany.id,
+      departmentId: service.id
+    },
+    update: {}
+  });
 
   const machineCount = await prisma.machine.count();
 
   if (machineCount === 0) {
     await prisma.machine.createMany({
       data: [
-        { name: 'Gravemaskin AF-01', machineNumber: 'AF-1001', type: 'Gravemaskin', project: e1.name, projectId: e1.id, companyId: af.id, status: MachineStatus.LEDIG },
-        { name: 'Pumpe AF-02', machineNumber: 'AF-1002', type: 'Pumpe', project: e1.name, projectId: e1.id, companyId: af.id, status: MachineStatus.SERVICE },
-        { name: 'Generator AF-03', machineNumber: 'AF-1003', type: 'Generator', project: rkv.name, projectId: rkv.id, companyId: af.id, status: MachineStatus.LEDIG },
-        { name: 'Løftekran AF-04', machineNumber: 'AF-1004', type: 'Kran', project: rkv.name, projectId: rkv.id, companyId: af.id, status: MachineStatus.LEDIG }
+        { name: 'Gravemaskin DEMO-01', machineNumber: 'DEMO-1001', type: 'Gravemaskin', project: prosjektNord.name, projectId: prosjektNord.id, companyId: demoCompany.id, status: MachineStatus.LEDIG },
+        { name: 'Pumpe DEMO-02', machineNumber: 'DEMO-1002', type: 'Pumpe', project: prosjektNord.name, projectId: prosjektNord.id, companyId: demoCompany.id, status: MachineStatus.SERVICE },
+        { name: 'Generator DEMO-03', machineNumber: 'DEMO-1003', type: 'Generator', project: prosjektSyd.name, projectId: prosjektSyd.id, companyId: demoCompany.id, status: MachineStatus.LEDIG },
+        { name: 'Lastebil DEMO-04', machineNumber: 'DEMO-1004', type: 'Lastebil', project: prosjektSyd.name, projectId: prosjektSyd.id, companyId: demoCompany.id, status: MachineStatus.LEDIG }
       ]
     });
     seeded = true;

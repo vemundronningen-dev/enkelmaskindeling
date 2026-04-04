@@ -6,7 +6,7 @@ import { requireUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 function canManageProjects(role: UserRole) {
-  return role === UserRole.SUPERADMIN || role === UserRole.COMPANY_ADMIN || role === UserRole.DEPARTMENT_MANAGER;
+  return role === UserRole.ADMIN;
 }
 
 export async function createProject(formData: FormData) {
@@ -19,8 +19,7 @@ export async function createProject(formData: FormData) {
 
   if (!name || !companyId) return;
 
-  if (user.role !== UserRole.SUPERADMIN && user.companyId !== companyId) return;
-  if (user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId !== departmentId) return;
+  if (user.companyId !== companyId) return;
 
   const department = departmentId
     ? await prisma.department.findFirst({ where: { id: departmentId, companyId } })
@@ -54,16 +53,13 @@ export async function updateProject(formData: FormData) {
   const project = await prisma.project.findUnique({ where: { id: projectId } });
   if (!project) return;
 
-  if (user.role !== UserRole.SUPERADMIN && user.companyId !== project.companyId) return;
-  if (user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId !== project.departmentId) return;
+  if (user.companyId !== project.companyId) return;
 
   const department = departmentId
     ? await prisma.department.findFirst({ where: { id: departmentId, companyId: project.companyId } })
     : null;
 
   if (departmentId && !department) return;
-  if (user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId !== (department?.id ?? null)) return;
-
   await prisma.project.update({
     where: { id: projectId },
     data: {

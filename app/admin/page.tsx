@@ -1,14 +1,14 @@
 import { UserRole } from '@prisma/client';
 import { requireAdmin } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { createCompany, createDepartment, createManagedUser, createProject } from './actions';
+import { createDepartment, createManagedUser, createProject } from './actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
   const currentUser = await requireAdmin();
 
-  const whereCompany = currentUser.role === UserRole.SUPERADMIN ? {} : { id: currentUser.companyId ?? '' };
+  const whereCompany = { id: currentUser.companyId };
 
   const companies = await prisma.company.findMany({
     where: whereCompany,
@@ -32,16 +32,6 @@ export default async function AdminPage() {
   return (
     <section className="space-y-6">
       <h1 className="text-2xl font-bold">Admin: selskaper, etater og prosjekter</h1>
-
-      {currentUser.role === UserRole.SUPERADMIN && (
-        <div className="rounded-xl border bg-white p-4">
-          <h2 className="mb-3 text-lg font-semibold">Opprett bedrift</h2>
-          <form action={createCompany} className="flex gap-2">
-            <input name="name" required placeholder="Eks. Oslo kommune" className="flex-1 rounded-md border px-3 py-2" />
-            <button className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white">Opprett</button>
-          </form>
-        </div>
-      )}
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="rounded-xl border bg-white p-4">
@@ -94,8 +84,7 @@ export default async function AdminPage() {
           <input name="password" required placeholder="Midlertidig passord" className="rounded-md border px-3 py-2" />
           <select name="role" required className="rounded-md border px-3 py-2">
             <option value={UserRole.USER}>Bruker</option>
-            <option value={UserRole.DEPARTMENT_MANAGER}>Etatsleder</option>
-            <option value={UserRole.COMPANY_ADMIN}>Bedriftsadmin</option>
+            <option value={UserRole.ADMIN}>Admin</option>
           </select>
           <select name="companyId" required className="rounded-md border px-3 py-2">
             <option value="">Velg bedrift</option>

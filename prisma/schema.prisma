@@ -14,9 +14,7 @@ enum MachineStatus {
 }
 
 enum UserRole {
-  SUPERADMIN
-  COMPANY_ADMIN
-  DEPARTMENT_MANAGER
+  ADMIN
   USER
 }
 

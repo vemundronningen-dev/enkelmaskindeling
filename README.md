@@ -17,11 +17,9 @@ Webapp for maskiner med brukerhierarki, innlogging og automatisk Neon-oppsett.
   - prosjekter
   - brukere og roller
 - Hierarki:
-  - `SUPERADMIN`
-  - `COMPANY_ADMIN`
-  - `DEPARTMENT_MANAGER`
+  - `ADMIN`
   - `USER`
-- `/machines` viser maskiner i ditt scope (bedrift/etat)
+- `/machines` viser maskiner i din bedrift
 - Tildeling av ansvarlig bruker i tabell
 - `/available` viser ledige maskiner i ditt scope
 - `/projects` viser prosjekter med maskinoversikt
@@ -36,7 +34,7 @@ curl -X POST https://DIN-APP/api/setup
 Dette oppretter tabeller, relasjoner, demo-hierarki og default admin automatisk.
 
 ### Demo login
-- E-post: `admin@maskin.no`
+- E-post: `admin@demo.no`
 - Passord: `Admin123!`
 
 ## Lokal oppstart
