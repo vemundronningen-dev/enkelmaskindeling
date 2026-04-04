@@ -16,7 +16,7 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
 
   const projectScopeWhere = { companyId: user.companyId };
 
-  const [projects, companies, departments] = await Promise.all([
+  const [projects, departments] = await Promise.all([
     prisma.project.findMany({
       where: projectScopeWhere,
       include: {
@@ -26,10 +26,6 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
           orderBy: { machineNumber: 'asc' }
         }
       },
-      orderBy: { name: 'asc' }
-    }),
-    prisma.company.findMany({
-      where: { id: user.companyId },
       orderBy: { name: 'asc' }
     }),
     prisma.department.findMany({
@@ -54,23 +50,6 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
               <label className="text-sm font-medium">
                 Prosjektnavn
                 <input name="name" required className="mt-1 w-full rounded-md border px-3 py-2" placeholder="Eks. Nytt byggefelt" />
-              </label>
-              <label className="text-sm font-medium">
-                Bedrift
-                <select
-                  name="companyId"
-                  required
-                  defaultValue={user.companyId}
-                  className="mt-1 w-full rounded-md border px-3 py-2"
-                  disabled
-                >
-                  <option value="">Velg bedrift</option>
-                  {companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {company.name}
-                    </option>
-                  ))}
-                </select>
               </label>
               <label className="text-sm font-medium">
                 Etat

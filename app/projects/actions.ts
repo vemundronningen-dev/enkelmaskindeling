@@ -14,12 +14,10 @@ export async function createProject(formData: FormData) {
   if (!canManageProjects(user.role)) return;
 
   const name = formData.get('name')?.toString().trim();
-  const companyId = formData.get('companyId')?.toString();
   const departmentId = formData.get('departmentId')?.toString() || null;
+  const companyId = user.companyId;
 
-  if (!name || !companyId) return;
-
-  if (user.companyId !== companyId) return;
+  if (!name) return;
 
   const department = departmentId
     ? await prisma.department.findFirst({ where: { id: departmentId, companyId } })
@@ -50,10 +48,13 @@ export async function updateProject(formData: FormData) {
 
   if (!projectId || !name) return;
 
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  const project = await prisma.project.findFirst({
+    where: {
+      id: projectId,
+      companyId: user.companyId
+    }
+  });
   if (!project) return;
-
-  if (user.companyId !== project.companyId) return;
 
   const department = departmentId
     ? await prisma.department.findFirst({ where: { id: departmentId, companyId: project.companyId } })
