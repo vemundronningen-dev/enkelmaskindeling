@@ -138,7 +138,7 @@ export default function Home() {
               Opprett bedrift
             </Link>
             <Link
-              href="/login"
+              href="/demo"
               className="rounded-lg border border-white/60 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
             >
               Prøv demo
