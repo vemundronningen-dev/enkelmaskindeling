@@ -104,23 +104,43 @@ export async function ensureDatabaseSetup() {
   await prisma.$executeRawUnsafe(`ALTER TABLE "Machine" ADD COLUMN IF NOT EXISTS "projectId" TEXT;`);
   await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "Machine_machineNumber_key" ON "Machine"("machineNumber");`);
 
-  await prisma.$executeRawUnsafe(`ALTER TABLE "Department" DROP CONSTRAINT IF EXISTS "Department_companyId_fkey";`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "Project" DROP CONSTRAINT IF EXISTS "Project_companyId_fkey";`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "Project" DROP CONSTRAINT IF EXISTS "Project_departmentId_fkey";`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "User" DROP CONSTRAINT IF EXISTS "User_companyId_fkey";`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "User" DROP CONSTRAINT IF EXISTS "User_departmentId_fkey";`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "Session" DROP CONSTRAINT IF EXISTS "Session_userId_fkey";`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "Machine" DROP CONSTRAINT IF EXISTS "Machine_responsibleUserId_fkey";`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "Machine" DROP CONSTRAINT IF EXISTS "Machine_projectId_fkey";`);
+  await prisma.$executeRawUnsafe(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Department_companyId_fkey') THEN
+        ALTER TABLE "Department" ADD CONSTRAINT "Department_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+      END IF;
 
-  await prisma.$executeRawUnsafe(`ALTER TABLE "Department" ADD CONSTRAINT "Department_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE CASCADE ON UPDATE CASCADE;`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "Project" ADD CONSTRAINT "Project_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE CASCADE ON UPDATE CASCADE;`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "Project" ADD CONSTRAINT "Project_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE;`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD CONSTRAINT "User_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE SET NULL ON UPDATE CASCADE;`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD CONSTRAINT "User_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE;`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "Machine" ADD CONSTRAINT "Machine_responsibleUserId_fkey" FOREIGN KEY ("responsibleUserId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;`);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "Machine" ADD CONSTRAINT "Machine_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE SET NULL ON UPDATE CASCADE;`);
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Project_companyId_fkey') THEN
+        ALTER TABLE "Project" ADD CONSTRAINT "Project_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+      END IF;
+
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Project_departmentId_fkey') THEN
+        ALTER TABLE "Project" ADD CONSTRAINT "Project_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+      END IF;
+
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'User_companyId_fkey') THEN
+        ALTER TABLE "User" ADD CONSTRAINT "User_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+      END IF;
+
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'User_departmentId_fkey') THEN
+        ALTER TABLE "User" ADD CONSTRAINT "User_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+      END IF;
+
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Session_userId_fkey') THEN
+        ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+      END IF;
+
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Machine_responsibleUserId_fkey') THEN
+        ALTER TABLE "Machine" ADD CONSTRAINT "Machine_responsibleUserId_fkey" FOREIGN KEY ("responsibleUserId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+      END IF;
+
+      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Machine_projectId_fkey') THEN
+        ALTER TABLE "Machine" ADD CONSTRAINT "Machine_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+      END IF;
+    END
+    $$;
+  `);
 
   let seeded = false;
 

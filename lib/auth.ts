@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { UserRole } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { ensureUserAuthColumns } from '@/lib/db-compat';
 
 const SESSION_COOKIE = 'maskin_session';
 
@@ -46,6 +47,8 @@ export async function destroySession() {
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
+  await ensureUserAuthColumns();
+
   const token = cookies().get(SESSION_COOKIE)?.value;
   if (!token) return null;
 
