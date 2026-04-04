@@ -1,33 +1,62 @@
 'use server';
 
-import { UserRole } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { hashPassword } from '@/lib/password';
 import { prisma } from '@/lib/prisma';
 
+function withError(message: string): never {
+  redirect(`/users?error=${encodeURIComponent(message)}`);
+}
+
+function requireNonEmptyField(formData: FormData, field: string, errorMessage: string) {
+  const value = formData.get(field);
+
+  if (typeof value !== 'string') {
+    withError(errorMessage);
+  }
+
+  const normalizedValue = value.trim();
+
+  if (!normalizedValue) {
+    withError(errorMessage);
+  }
+
+  return normalizedValue;
+}
+
 export async function createUser(formData: FormData) {
   const currentUser = await requireAdmin();
 
-  const name = formData.get('name')?.toString();
-  const email = formData.get('email')?.toString().toLowerCase();
-  const phone = formData.get('phone')?.toString() || null;
-  const password = formData.get('password')?.toString() ?? 'Passord123!';
+  if (!currentUser.companyId) {
+    withError('Du må være knyttet til en bedrift for å opprette brukere.');
+  }
 
-  if (!name || !email) return;
-  if (!currentUser.companyId) return;
+  const name = requireNonEmptyField(formData, 'name', 'Navn er påkrevd.');
+  const email = requireNonEmptyField(formData, 'email', 'E-post er påkrevd.').toLowerCase();
+  const password = requireNonEmptyField(formData, 'password', 'Passord er påkrevd.');
+  const roleInput = formData.get('role');
+  const role = roleInput === UserRole.ADMIN ? UserRole.ADMIN : UserRole.USER;
 
-  await prisma.user.create({
-    data: {
-      name,
-      email,
-      phone,
-      passwordHash: hashPassword(password),
-      role: UserRole.USER,
-      companyId: currentUser.companyId
+  try {
+    await prisma.user.create({
+      data: {
+        name,
+        email,
+        passwordHash: hashPassword(password),
+        role,
+        companyId: currentUser.companyId
+      }
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      withError('E-postadressen er allerede i bruk.');
     }
-  });
+
+    withError('Kunne ikke opprette bruker. Prøv igjen.');
+  }
 
   revalidatePath('/users');
   revalidatePath('/machines');

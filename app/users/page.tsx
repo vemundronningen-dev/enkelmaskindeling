@@ -31,7 +31,7 @@ export default async function UsersPage({
       {searchParams?.error && <p className="rounded-md bg-red-50 p-2 text-sm text-red-700">{searchParams.error}</p>}
       {searchParams?.success && <p className="rounded-md bg-green-50 p-2 text-sm text-green-700">{searchParams.success}</p>}
       <div className="rounded-xl border bg-white p-4">
-        <h2 className="mb-3 text-lg font-semibold">Opprett enkel bruker</h2>
+        <h2 className="mb-3 text-lg font-semibold">Opprett bruker</h2>
         <form action={createUser} className="grid gap-3 md:grid-cols-2">
           <label className="text-sm font-medium">
             Navn
@@ -48,22 +48,21 @@ export default async function UsersPage({
             />
           </label>
           <label className="text-sm font-medium">
-            Telefonnummer
+            Passord
             <input
-              type="tel"
-              name="phone"
+              type="password"
+              name="password"
               className="mt-1 w-full rounded-md border px-3 py-2"
-              placeholder="Eks. +47 900 00 000"
+              placeholder="Skriv passord"
+              required
             />
           </label>
           <label className="text-sm font-medium">
-            Midlertidig passord
-            <input
-              type="text"
-              name="password"
-              className="mt-1 w-full rounded-md border px-3 py-2"
-              placeholder="Eks. Passord123!"
-            />
+            Rolle
+            <select name="role" defaultValue="USER" className="mt-1 w-full rounded-md border px-3 py-2">
+              <option value="USER">USER</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
           </label>
           <div className="md:col-span-2">
             <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
