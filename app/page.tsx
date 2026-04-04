@@ -70,7 +70,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="space-y-6">
+      <section id="hvorfor-oss" className="space-y-6 scroll-mt-24">
         <div className="max-w-3xl space-y-3">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">Hvorfor velge maskindeling.no?</h2>
           <p className="text-slate-600">
@@ -89,7 +89,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="space-y-6">
+      <section id="funksjoner" className="space-y-6 scroll-mt-24">
         <div className="max-w-3xl space-y-3">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">Funksjoner som gir flyt i hverdagen</h2>
           <p className="text-slate-600">Enkelt grensesnitt, tydelige roller og kontroll i alle ledd.</p>
