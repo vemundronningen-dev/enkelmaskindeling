@@ -38,6 +38,7 @@ async function runSetup(request: NextRequest) {
     });
   } catch (error) {
     const err = error as { code?: string; message?: string };
+    console.error('[api/setup] Setup failed', error);
 
     return NextResponse.json(
       {
