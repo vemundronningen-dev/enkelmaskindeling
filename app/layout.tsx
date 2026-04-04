@@ -28,6 +28,7 @@ export default async function RootLayout({
     { href: '/#funksjoner', label: 'Funksjoner' },
     { href: '/#hvorfor-oss', label: 'Hvorfor oss' },
     { href: '/signup-company', label: 'Opprett bedrift' },
+    { href: '/demo', label: 'Prøv demo' },
     { href: '/login', label: 'Logg inn' }
   ];
 
@@ -83,6 +84,9 @@ export default async function RootLayout({
               </Link>
               <Link href="/#hvorfor-oss" className="hover:text-slate-900">
                 Hvorfor oss
+              </Link>
+              <Link href="/demo" className="hover:text-slate-900">
+                Prøv demo
               </Link>
               <Link href="/login" className="hover:text-slate-900">
                 Logg inn
