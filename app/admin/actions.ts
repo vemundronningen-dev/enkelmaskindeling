@@ -4,7 +4,6 @@ import { UserRole } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
 import { hashPassword } from '@/lib/password';
-import { ensureUserPasswordHashColumn } from '@/lib/db-compat';
 import { prisma } from '@/lib/prisma';
 
 export async function createCompany(formData: FormData) {
@@ -53,7 +52,6 @@ export async function createProject(formData: FormData) {
 
 export async function createManagedUser(formData: FormData) {
   const currentUser = await requireAdmin();
-  await ensureUserPasswordHashColumn();
 
   const name = formData.get('name')?.toString().trim();
   const email = formData.get('email')?.toString().trim().toLowerCase();

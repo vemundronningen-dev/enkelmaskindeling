@@ -3,7 +3,6 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { UserRole } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { ensureUserPasswordHashColumn } from '@/lib/db-compat';
 
 const SESSION_COOKIE = 'maskin_session';
 
@@ -47,8 +46,6 @@ export async function destroySession() {
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  if (!process.env.DATABASE_URL) return null;
-  await ensureUserPasswordHashColumn();
   const token = cookies().get(SESSION_COOKIE)?.value;
   if (!token) return null;
 

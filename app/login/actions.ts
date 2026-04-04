@@ -3,11 +3,9 @@
 import { redirect } from 'next/navigation';
 import { verifyPassword } from '@/lib/password';
 import { createSession, destroySession } from '@/lib/auth';
-import { ensureUserPasswordHashColumn } from '@/lib/db-compat';
 import { prisma } from '@/lib/prisma';
 
 export async function login(formData: FormData) {
-  await ensureUserPasswordHashColumn();
   const email = formData.get('email')?.toString().trim().toLowerCase();
   const password = formData.get('password')?.toString() ?? '';
 

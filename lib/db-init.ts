@@ -67,8 +67,7 @@ export async function ensureDatabaseSetup() {
       CONSTRAINT "User_pkey" PRIMARY KEY ("id")
     );
   `);
-  await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "passwordHash" TEXT;`);
-  await prisma.$executeRawUnsafe(`UPDATE "User" SET "passwordHash" = '' WHERE "passwordHash" IS NULL;`);
+  await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "passwordHash" TEXT NOT NULL DEFAULT '';`);
   await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "role" "UserRole" NOT NULL DEFAULT 'USER';`);
   await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "companyId" TEXT;`);
   await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "departmentId" TEXT;`);

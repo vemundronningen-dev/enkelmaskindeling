@@ -13,7 +13,6 @@ export default async function UsersPage({
 }) {
   await ensureDatabaseSetup();
   const currentUser = await requireUser();
-  const canCreateUsers = currentUser.role === UserRole.SUPERADMIN || currentUser.role === UserRole.COMPANY_ADMIN;
 
   const users = await prisma.user.findMany({
     where: currentUser.role === UserRole.SUPERADMIN ? {} : { companyId: currentUser.companyId ?? undefined },
@@ -32,51 +31,48 @@ export default async function UsersPage({
       <h1 className="text-2xl font-bold">Brukere</h1>
       {searchParams?.error && <p className="rounded-md bg-red-50 p-2 text-sm text-red-700">{searchParams.error}</p>}
       {searchParams?.success && <p className="rounded-md bg-green-50 p-2 text-sm text-green-700">{searchParams.success}</p>}
-      {canCreateUsers && (
-        <div className="rounded-xl border bg-white p-4">
-          <h2 className="mb-3 text-lg font-semibold">Opprett enkel bruker</h2>
-          <form action={createUser} className="grid gap-3 md:grid-cols-2">
-            <label className="text-sm font-medium">
-              Navn
-              <input name="name" className="mt-1 w-full rounded-md border px-3 py-2" placeholder="Eks. Ola Nordmann" required />
-            </label>
-            <label className="text-sm font-medium">
-              E-post
-              <input
-                type="email"
-                name="email"
-                className="mt-1 w-full rounded-md border px-3 py-2"
-                placeholder="ola@firma.no"
-                required
-              />
-            </label>
-            <label className="text-sm font-medium">
-              Telefonnummer
-              <input
-                type="tel"
-                name="phone"
-                className="mt-1 w-full rounded-md border px-3 py-2"
-                placeholder="Eks. +47 900 00 000"
-              />
-            </label>
-            <label className="text-sm font-medium">
-              Midlertidig passord
-              <input
-                type="password"
-                name="password"
-                className="mt-1 w-full rounded-md border px-3 py-2"
-                placeholder="Eks. Passord123!"
-                required
-              />
-            </label>
-            <div className="md:col-span-2">
-              <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-                Opprett bruker
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      <div className="rounded-xl border bg-white p-4">
+        <h2 className="mb-3 text-lg font-semibold">Opprett enkel bruker</h2>
+        <form action={createUser} className="grid gap-3 md:grid-cols-2">
+          <label className="text-sm font-medium">
+            Navn
+            <input name="name" className="mt-1 w-full rounded-md border px-3 py-2" placeholder="Eks. Ola Nordmann" required />
+          </label>
+          <label className="text-sm font-medium">
+            E-post
+            <input
+              type="email"
+              name="email"
+              className="mt-1 w-full rounded-md border px-3 py-2"
+              placeholder="ola@firma.no"
+              required
+            />
+          </label>
+          <label className="text-sm font-medium">
+            Telefonnummer
+            <input
+              type="tel"
+              name="phone"
+              className="mt-1 w-full rounded-md border px-3 py-2"
+              placeholder="Eks. +47 900 00 000"
+            />
+          </label>
+          <label className="text-sm font-medium">
+            Midlertidig passord
+            <input
+              type="text"
+              name="password"
+              className="mt-1 w-full rounded-md border px-3 py-2"
+              placeholder="Eks. Passord123!"
+            />
+          </label>
+          <div className="md:col-span-2">
+            <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+              Opprett bruker
+            </button>
+          </div>
+        </form>
+      </div>
       <div className="grid gap-4 md:grid-cols-2">
         {users.map((user) => (
           <article key={user.id} className="rounded-xl border bg-white p-4">
