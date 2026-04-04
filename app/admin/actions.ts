@@ -71,7 +71,7 @@ export async function createManagedUser(formData: FormData) {
       name,
       email,
       phone,
-      passwordHash: hashPassword(password),
+      passwordHash: await hashPassword(password),
       role,
       companyId,
       departmentId

@@ -17,7 +17,7 @@ export default async function LoginPage({
     <section className="mx-auto max-w-md space-y-6 rounded-xl border bg-white p-6">
       <div>
         <h1 className="text-2xl font-bold">Logg inn</h1>
-        <p className="text-sm text-slate-600">Brukeren opprettes automatisk via /api/setup i Neon-databasen.</p>
+        <p className="text-sm text-slate-600">Logg inn med e-post og passord for å se dataene til din bedrift.</p>
       </div>
       {searchParams?.error && <p className="rounded-md bg-red-50 p-2 text-sm text-red-700">{searchParams.error}</p>}
       {searchParams?.success && <p className="rounded-md bg-emerald-50 p-2 text-sm text-emerald-700">{searchParams.success}</p>}
@@ -34,9 +34,6 @@ export default async function LoginPage({
           Logg inn
         </button>
       </form>
-      <div className="rounded-md bg-slate-50 p-3 text-xs text-slate-600">
-        Demo admin: <strong>admin@demo.no</strong> / <strong>Admin123!</strong>
-      </div>
     </section>
   );
 }

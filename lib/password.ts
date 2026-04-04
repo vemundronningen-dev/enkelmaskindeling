@@ -1,24 +1,21 @@
-import { randomBytes, scryptSync, timingSafeEqual } from 'crypto';
+import { prisma } from '@/lib/prisma';
 
-function parseHash(storedHash: string) {
-  const [salt, hash] = storedHash.split(':');
-  return { salt, hash };
+const BCRYPT_COST = 12;
+
+export async function hashPassword(password: string) {
+  const result = await prisma.$queryRaw<Array<{ hash: string }>>`
+    SELECT crypt(${password}, gen_salt('bf', ${BCRYPT_COST})) AS hash
+  `;
+
+  return result[0]?.hash ?? '';
 }
 
-export function hashPassword(password: string) {
-  const salt = randomBytes(16).toString('hex');
-  const hash = scryptSync(password, salt, 64).toString('hex');
-  return `${salt}:${hash}`;
-}
+export async function verifyPassword(password: string, storedHash: string) {
+  if (!storedHash) return false;
 
-export function verifyPassword(password: string, storedHash: string) {
-  const { salt, hash } = parseHash(storedHash);
-  if (!salt || !hash) return false;
+  const result = await prisma.$queryRaw<Array<{ matches: boolean }>>`
+    SELECT crypt(${password}, ${storedHash}) = ${storedHash} AS matches
+  `;
 
-  const passwordHash = scryptSync(password, salt, 64);
-  const storedBuffer = Buffer.from(hash, 'hex');
-
-  if (passwordHash.length !== storedBuffer.length) return false;
-
-  return timingSafeEqual(passwordHash, storedBuffer);
+  return result[0]?.matches ?? false;
 }

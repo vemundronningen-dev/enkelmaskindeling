@@ -18,7 +18,7 @@ export async function login(formData: FormData) {
 
   const user = await prisma.user.findUnique({ where: { email } });
 
-  if (!user || !verifyPassword(password, user.passwordHash)) {
+  if (!user || !(await verifyPassword(password, user.passwordHash))) {
     redirect('/login?error=Ugyldig+epost+eller+passord');
   }
 

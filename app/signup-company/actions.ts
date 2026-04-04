@@ -47,7 +47,7 @@ export async function signupCompany(formData: FormData) {
         data: {
           name: adminName,
           email: adminEmail,
-          passwordHash: hashPassword(password),
+          passwordHash: await hashPassword(password),
           role: UserRole.ADMIN,
           companyId: company.id
         }
