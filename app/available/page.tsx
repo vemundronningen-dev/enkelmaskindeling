@@ -1,11 +1,28 @@
-import { MachineStatus } from '@prisma/client';
+import { MachineStatus, UserRole } from '@prisma/client';
 import { StatusBadge } from '@/app/components/status-badge';
 import { prisma } from '@/lib/prisma';
+import { requireUser } from '@/lib/auth';
+
 export const dynamic = 'force-dynamic';
 
 export default async function AvailablePage() {
+  const currentUser = await requireUser();
+
   const machines = await prisma.machine.findMany({
-    where: { status: MachineStatus.LEDIG },
+    where: {
+      status: MachineStatus.LEDIG,
+      ...(currentUser.role === UserRole.SUPERADMIN
+        ? {}
+        : {
+            projectRef: {
+              companyId: currentUser.companyId ?? undefined,
+              ...(currentUser.role === UserRole.DEPARTMENT_MANAGER && currentUser.departmentId
+                ? { departmentId: currentUser.departmentId }
+                : {})
+            }
+          })
+    },
+    include: { projectRef: true },
     orderBy: { machineNumber: 'asc' }
   });
 
@@ -29,7 +46,7 @@ export default async function AvailablePage() {
                 <td className="px-3 py-2">{machine.name}</td>
                 <td className="px-3 py-2">{machine.machineNumber}</td>
                 <td className="px-3 py-2">{machine.type}</td>
-                <td className="px-3 py-2">{machine.project}</td>
+                <td className="px-3 py-2">{machine.projectRef?.name ?? machine.project}</td>
                 <td className="px-3 py-2">
                   <StatusBadge status={machine.status} />
                 </td>

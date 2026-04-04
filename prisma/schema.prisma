@@ -13,21 +13,76 @@ enum MachineStatus {
   SERVICE
 }
 
-model User {
-  id        String    @id @default(cuid())
-  name      String
-  email     String    @unique
-  phone     String?
-  machines  Machine[]
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+enum UserRole {
+  SUPERADMIN
+  COMPANY_ADMIN
+  DEPARTMENT_MANAGER
+  USER
+}
+
+model Company {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  departments Department[]
+  projects    Project[]
+  users       User[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Department {
+  id          String    @id @default(cuid())
+  name        String
+  companyId   String
+  company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users       User[]
+  projects    Project[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([companyId, name])
 }
 
 model Project {
+  id           String      @id @default(cuid())
+  name         String
+  companyId    String
+  company      Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  machines     Machine[]
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@unique([companyId, name])
+}
+
+model User {
+  id           String      @id @default(cuid())
+  name         String
+  email        String      @unique
+  phone        String?
+  passwordHash String
+  role         UserRole    @default(USER)
+  companyId    String?
+  company      Company?    @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  sessions     Session[]
+  machines     Machine[]   @relation("ResponsibleUserMachines")
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Session {
   id        String   @id @default(cuid())
-  name      String   @unique
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Machine {
@@ -36,8 +91,10 @@ model Machine {
   machineNumber     String        @unique
   type              String
   project           String
+  projectId         String?
+  projectRef        Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
   status            MachineStatus @default(LEDIG)
-  responsibleUser   User?         @relation(fields: [responsibleUserId], references: [id])
+  responsibleUser   User?         @relation("ResponsibleUserMachines", fields: [responsibleUserId], references: [id], onDelete: SetNull)
   responsibleUserId String?
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt

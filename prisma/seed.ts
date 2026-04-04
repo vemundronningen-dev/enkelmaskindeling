@@ -1,44 +1,43 @@
-import { MachineStatus, PrismaClient } from '@prisma/client';
+import { PrismaClient, UserRole } from '@prisma/client';
+import { ensureDatabaseSetup } from '../lib/db-init';
+import { hashPassword } from '../lib/password';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.machine.deleteMany();
-  await prisma.user.deleteMany();
+  await ensureDatabaseSetup();
 
-  const users = await prisma.user.createManyAndReturn({
-    data: [
-      { name: 'Ola Nordmann', email: 'ola@example.com', phone: '+47 900 00 001' },
-      { name: 'Kari Hansen', email: 'kari@example.com', phone: '+47 900 00 002' },
-      { name: 'Per Olsen', email: 'per@example.com', phone: '+47 900 00 003' },
-      { name: 'Anne Nilsen', email: 'anne@example.com', phone: '+47 900 00 004' },
-      { name: 'Mina Johansen', email: 'mina@example.com', phone: '+47 900 00 005' }
-    ]
-  });
+  const firstCompany = await prisma.company.findFirst({ orderBy: { createdAt: 'asc' } });
 
-  await prisma.machine.createMany({
-    data: [
-      { name: 'Gravemaskin A', machineNumber: 'M-1001', type: 'Gravemaskin', project: 'E6 Nord', status: MachineStatus.LEDIG },
-      { name: 'Gravemaskin B', machineNumber: 'M-1002', type: 'Gravemaskin', project: 'E6 Nord', status: MachineStatus.SERVICE },
-      { name: 'Hjullaster 1', machineNumber: 'M-1003', type: 'Hjullaster', project: 'Havn Vest', status: MachineStatus.LEDIG },
-      { name: 'Hjullaster 2', machineNumber: 'M-1004', type: 'Hjullaster', project: 'Havn Vest', status: MachineStatus.LEDIG },
-      { name: 'Dumper 1', machineNumber: 'M-1005', type: 'Dumper', project: 'Tunnel Sør', status: MachineStatus.SERVICE },
-      { name: 'Dumper 2', machineNumber: 'M-1006', type: 'Dumper', project: 'Tunnel Sør', status: MachineStatus.LEDIG },
-      { name: 'Vals 1', machineNumber: 'M-1007', type: 'Vals', project: 'Asfalt Øst', status: MachineStatus.LEDIG },
-      { name: 'Vals 2', machineNumber: 'M-1008', type: 'Vals', project: 'Asfalt Øst', status: MachineStatus.LEDIG },
-      { name: 'Kran 1', machineNumber: 'M-1009', type: 'Kran', project: 'Bygg Sentrum', status: MachineStatus.SERVICE },
-      { name: 'Kran 2', machineNumber: 'M-1010', type: 'Kran', project: 'Bygg Sentrum', status: MachineStatus.LEDIG },
-      { name: 'Lift 1', machineNumber: 'M-1011', type: 'Lift', project: 'Skole Vest', status: MachineStatus.LEDIG },
-      { name: 'Lift 2', machineNumber: 'M-1012', type: 'Lift', project: 'Skole Vest', status: MachineStatus.LEDIG }
-    ]
-  });
+  if (firstCompany) {
+    const seedUsers = [
+      { name: 'Drift Bruker 1', email: 'drift1@example.com', password: 'Passord123!', role: UserRole.USER },
+      { name: 'Drift Bruker 2', email: 'drift2@example.com', password: 'Passord123!', role: UserRole.USER },
+      { name: 'Prosjektleder', email: 'prosjektleder@example.com', password: 'Passord123!', role: UserRole.COMPANY_ADMIN }
+    ];
 
-  const machines = await prisma.machine.findMany({ orderBy: { machineNumber: 'asc' } });
+    for (const seedUser of seedUsers) {
+      await prisma.user.upsert({
+        where: { email: seedUser.email },
+        update: {
+          name: seedUser.name,
+          role: seedUser.role,
+          companyId: firstCompany.id,
+          passwordHash: hashPassword(seedUser.password)
+        },
+        create: {
+          name: seedUser.name,
+          email: seedUser.email,
+          role: seedUser.role,
+          companyId: firstCompany.id,
+          passwordHash: hashPassword(seedUser.password)
+        }
+      });
+    }
+  }
 
-  await prisma.machine.update({ where: { id: machines[0].id }, data: { responsibleUserId: users[0].id, status: MachineStatus.TILDELT } });
-  await prisma.machine.update({ where: { id: machines[2].id }, data: { responsibleUserId: users[1].id, status: MachineStatus.TILDELT } });
-  await prisma.machine.update({ where: { id: machines[5].id }, data: { responsibleUserId: users[2].id, status: MachineStatus.TILDELT } });
-  await prisma.machine.update({ where: { id: machines[9].id }, data: { responsibleUserId: users[3].id, status: MachineStatus.TILDELT } });
+  const stats = await prisma.user.count();
+  console.log(`Seed ferdig. Brukere: ${stats}`);
 }
 
 main()
