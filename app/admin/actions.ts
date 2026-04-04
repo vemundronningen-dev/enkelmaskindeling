@@ -58,10 +58,10 @@ export async function createManagedUser(formData: FormData) {
   const phone = formData.get('phone')?.toString().trim() || null;
   const password = formData.get('password')?.toString();
   const role = formData.get('role')?.toString() as UserRole;
-  const companyId = formData.get('companyId')?.toString() || null;
+  const companyId = formData.get('companyId')?.toString();
   const departmentId = formData.get('departmentId')?.toString() || null;
 
-  if (!name || !email || !password || !role) return;
+  if (!name || !email || !password || !role || !companyId) return;
   if (currentUser.role === UserRole.COMPANY_ADMIN && currentUser.companyId !== companyId) return;
 
   await prisma.user.create({

@@ -20,12 +20,15 @@ export async function ensureDatabaseSetup() {
     CREATE TABLE IF NOT EXISTS "Company" (
       "id" TEXT NOT NULL,
       "name" TEXT NOT NULL,
+      "orgNumber" TEXT,
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT "Company_pkey" PRIMARY KEY ("id")
     );
   `);
+  await prisma.$executeRawUnsafe(`ALTER TABLE "Company" ADD COLUMN IF NOT EXISTS "orgNumber" TEXT;`);
   await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "Company_name_key" ON "Company"("name");`);
+  await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "Company_orgNumber_key" ON "Company"("orgNumber");`);
 
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS "Department" (
@@ -92,6 +95,7 @@ export async function ensureDatabaseSetup() {
       "name" TEXT NOT NULL,
       "machineNumber" TEXT NOT NULL,
       "type" TEXT NOT NULL,
+      "companyId" TEXT,
       "project" TEXT NOT NULL,
       "projectId" TEXT,
       "status" "MachineStatus" NOT NULL DEFAULT 'LEDIG',
@@ -101,8 +105,38 @@ export async function ensureDatabaseSetup() {
       CONSTRAINT "Machine_pkey" PRIMARY KEY ("id")
     );
   `);
+  await prisma.$executeRawUnsafe(`ALTER TABLE "Machine" ADD COLUMN IF NOT EXISTS "companyId" TEXT;`);
   await prisma.$executeRawUnsafe(`ALTER TABLE "Machine" ADD COLUMN IF NOT EXISTS "projectId" TEXT;`);
   await prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "Machine_machineNumber_key" ON "Machine"("machineNumber");`);
+  await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Machine_companyId_idx" ON "Machine"("companyId");`);
+
+  const defaultCompany = await prisma.company.upsert({
+    where: { name: 'Standard bedrift' },
+    create: { name: 'Standard bedrift' },
+    update: {}
+  });
+
+  await prisma.$executeRaw`
+    UPDATE "User"
+    SET "companyId" = ${defaultCompany.id}
+    WHERE "companyId" IS NULL;
+  `;
+
+  await prisma.$executeRawUnsafe(`
+    UPDATE "Machine" m
+    SET "companyId" = p."companyId"
+    FROM "Project" p
+    WHERE m."projectId" = p."id" AND m."companyId" IS NULL;
+  `);
+
+  await prisma.$executeRaw`
+    UPDATE "Machine"
+    SET "companyId" = ${defaultCompany.id}
+    WHERE "companyId" IS NULL;
+  `;
+
+  await prisma.$executeRawUnsafe(`ALTER TABLE "User" ALTER COLUMN "companyId" SET NOT NULL;`);
+  await prisma.$executeRawUnsafe(`ALTER TABLE "Machine" ALTER COLUMN "companyId" SET NOT NULL;`);
 
   await prisma.$executeRawUnsafe(`
     DO $$
@@ -119,9 +153,10 @@ export async function ensureDatabaseSetup() {
         ALTER TABLE "Project" ADD CONSTRAINT "Project_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE;
       END IF;
 
-      IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'User_companyId_fkey') THEN
-        ALTER TABLE "User" ADD CONSTRAINT "User_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+      IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'User_companyId_fkey') THEN
+        ALTER TABLE "User" DROP CONSTRAINT "User_companyId_fkey";
       END IF;
+      ALTER TABLE "User" ADD CONSTRAINT "User_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
       IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'User_departmentId_fkey') THEN
         ALTER TABLE "User" ADD CONSTRAINT "User_departmentId_fkey" FOREIGN KEY ("departmentId") REFERENCES "Department"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -138,6 +173,11 @@ export async function ensureDatabaseSetup() {
       IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Machine_projectId_fkey') THEN
         ALTER TABLE "Machine" ADD CONSTRAINT "Machine_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE SET NULL ON UPDATE CASCADE;
       END IF;
+
+      IF EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'Machine_companyId_fkey') THEN
+        ALTER TABLE "Machine" DROP CONSTRAINT "Machine_companyId_fkey";
+      END IF;
+      ALTER TABLE "Machine" ADD CONSTRAINT "Machine_companyId_fkey" FOREIGN KEY ("companyId") REFERENCES "Company"("id") ON DELETE CASCADE ON UPDATE CASCADE;
     END
     $$;
   `);
@@ -149,14 +189,14 @@ export async function ensureDatabaseSetup() {
 
   const oslo = await prisma.company.upsert({
     where: { name: 'Oslo kommune' },
-    create: { name: 'Oslo kommune' },
-    update: {}
+    create: { name: 'Oslo kommune', orgNumber: '958935420' },
+    update: { orgNumber: '958935420' }
   });
 
   const af = await prisma.company.upsert({
     where: { name: 'AF Gruppen' },
-    create: { name: 'AF Gruppen' },
-    update: {}
+    create: { name: 'AF Gruppen', orgNumber: '983457747' },
+    update: { orgNumber: '983457747' }
   });
 
   const vann = await prisma.department.upsert({
@@ -220,10 +260,10 @@ export async function ensureDatabaseSetup() {
   if (machineCount === 0) {
     await prisma.machine.createMany({
       data: [
-        { name: 'Gravemaskin AF-01', machineNumber: 'AF-1001', type: 'Gravemaskin', project: e1.name, projectId: e1.id, status: MachineStatus.LEDIG },
-        { name: 'Pumpe AF-02', machineNumber: 'AF-1002', type: 'Pumpe', project: e1.name, projectId: e1.id, status: MachineStatus.SERVICE },
-        { name: 'Generator AF-03', machineNumber: 'AF-1003', type: 'Generator', project: rkv.name, projectId: rkv.id, status: MachineStatus.LEDIG },
-        { name: 'Løftekran AF-04', machineNumber: 'AF-1004', type: 'Kran', project: rkv.name, projectId: rkv.id, status: MachineStatus.LEDIG }
+        { name: 'Gravemaskin AF-01', machineNumber: 'AF-1001', type: 'Gravemaskin', project: e1.name, projectId: e1.id, companyId: af.id, status: MachineStatus.LEDIG },
+        { name: 'Pumpe AF-02', machineNumber: 'AF-1002', type: 'Pumpe', project: e1.name, projectId: e1.id, companyId: af.id, status: MachineStatus.SERVICE },
+        { name: 'Generator AF-03', machineNumber: 'AF-1003', type: 'Generator', project: rkv.name, projectId: rkv.id, companyId: af.id, status: MachineStatus.LEDIG },
+        { name: 'Løftekran AF-04', machineNumber: 'AF-1004', type: 'Kran', project: rkv.name, projectId: rkv.id, companyId: af.id, status: MachineStatus.LEDIG }
       ]
     });
     seeded = true;

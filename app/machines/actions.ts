@@ -9,8 +9,8 @@ function scopedMachineWhere(user: Awaited<ReturnType<typeof requireUser>>) {
   if (user.role === UserRole.SUPERADMIN) return {};
 
   return {
+    companyId: user.companyId,
     projectRef: {
-      companyId: user.companyId ?? undefined,
       ...(user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId ? { departmentId: user.departmentId } : {})
     }
   };
@@ -66,6 +66,7 @@ export async function updateMachine(formData: FormData) {
       name,
       machineNumber,
       type,
+      companyId: project.companyId,
       projectId,
       project: project.name,
       status: safeStatus
@@ -94,7 +95,7 @@ export async function updateMachineProject(formData: FormData) {
         ? { id: projectId }
         : {
             id: projectId,
-            companyId: user.companyId ?? undefined,
+            companyId: user.companyId,
             ...(user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId ? { departmentId: user.departmentId } : {})
           }
   });
@@ -104,6 +105,7 @@ export async function updateMachineProject(formData: FormData) {
   await prisma.machine.update({
     where: { id: machineId },
     data: {
+      companyId: project.companyId,
       projectId: project.id,
       project: project.name
     }
@@ -114,7 +116,7 @@ export async function updateMachineProject(formData: FormData) {
   revalidatePath('/available');
 }
 export async function createMachine(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
 
   const name = formData.get('name')?.toString();
   const machineNumber = formData.get('machineNumber')?.toString();
@@ -125,12 +127,15 @@ export async function createMachine(formData: FormData) {
 
   const project = await prisma.project.findUnique({ where: { id: projectId } });
   if (!project) return;
+  if (user.role !== UserRole.SUPERADMIN && project.companyId !== user.companyId) return;
+  if (user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId !== project.departmentId) return;
 
   await prisma.machine.create({
     data: {
       name,
       machineNumber,
       type,
+      companyId: project.companyId,
       projectId,
       project: project.name,
       status: MachineStatus.LEDIG

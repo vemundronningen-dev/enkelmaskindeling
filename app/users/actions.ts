@@ -15,6 +15,7 @@ export async function createUser(formData: FormData) {
   const password = formData.get('password')?.toString() ?? 'Passord123!';
 
   if (!name || !email) return;
+  if (!currentUser.companyId) return;
 
   await prisma.user.create({
     data: {

@@ -12,7 +12,7 @@ export type AuthUser = {
   name: string;
   email: string;
   role: UserRole;
-  companyId: string | null;
+  companyId: string;
   departmentId: string | null;
 };
 
