@@ -19,6 +19,7 @@ export default async function UsersPage({
       company: true,
       department: true,
       machines: {
+        where: { companyId: currentUser.companyId },
         orderBy: { machineNumber: 'asc' }
       }
     },

@@ -54,9 +54,10 @@ export async function updateMachine(formData: FormData) {
   const existing = await prisma.machine.findFirst({ where: { id: machineId, ...scopedMachineWhere(user) } });
   if (!existing) return;
 
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, companyId: user.companyId }
+  });
   if (!project) return;
-  if (project.companyId !== user.companyId) return;
 
   const safeStatus = existing.responsibleUserId && status === MachineStatus.LEDIG ? MachineStatus.TILDELT : status;
 
@@ -121,9 +122,10 @@ export async function createMachine(formData: FormData) {
 
   if (!name || !machineNumber || !type || !projectId) return;
 
-  const project = await prisma.project.findUnique({ where: { id: projectId } });
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, companyId: user.companyId }
+  });
   if (!project) return;
-  if (project.companyId !== user.companyId) return;
 
   await prisma.machine.create({
     data: {

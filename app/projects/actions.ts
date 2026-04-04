@@ -70,7 +70,7 @@ export async function updateProject(formData: FormData) {
   });
 
   await prisma.machine.updateMany({
-    where: { projectId },
+    where: { projectId, companyId: user.companyId },
     data: { project: name }
   });
 
