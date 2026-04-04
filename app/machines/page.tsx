@@ -1,4 +1,4 @@
-import { MachineStatus, UserRole } from '@prisma/client';
+import { MachineStatus } from '@prisma/client';
 import { StatusBadge } from '@/app/components/status-badge';
 import { ensureDatabaseSetup } from '@/lib/db-init';
 import { prisma } from '@/lib/prisma';
@@ -24,15 +24,9 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
   const editId = searchParams?.edit;
   await ensureDatabaseSetup();
 
-  const scopeWhere =
-    user.role === UserRole.SUPERADMIN
-      ? {}
-      : {
-          projectRef: {
-            companyId: user.companyId ?? undefined,
-            ...(user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId ? { departmentId: user.departmentId } : {})
-          }
-        };
+  const scopeWhere = {
+    companyId: user.companyId
+  };
 
   const [machines, users, projects] = await Promise.all([
     prisma.machine.findMany({
@@ -41,11 +35,11 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
       orderBy: { machineNumber: 'asc' }
     }),
     prisma.user.findMany({
-      where: user.role === UserRole.SUPERADMIN ? {} : { companyId: user.companyId ?? undefined },
+      where: { companyId: user.companyId },
       orderBy: { name: 'asc' }
     }),
     prisma.project.findMany({
-      where: user.role === UserRole.SUPERADMIN ? {} : { companyId: user.companyId ?? undefined },
+      where: { companyId: user.companyId },
       orderBy: { name: 'asc' }
     })
   ]);

@@ -14,13 +14,7 @@ type ProjectsPageProps = {
 export default async function ProjectsPage({ searchParams }: ProjectsPageProps) {
   const user = await requireUser();
 
-  const projectScopeWhere =
-    user.role === UserRole.SUPERADMIN
-      ? {}
-      : {
-          companyId: user.companyId ?? undefined,
-          ...(user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId ? { departmentId: user.departmentId } : {})
-        };
+  const projectScopeWhere = { companyId: user.companyId };
 
   const [projects, companies, departments] = await Promise.all([
     prisma.project.findMany({
@@ -35,23 +29,16 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
       orderBy: { name: 'asc' }
     }),
     prisma.company.findMany({
-      where: user.role === UserRole.SUPERADMIN ? {} : { id: user.companyId ?? undefined },
+      where: { id: user.companyId },
       orderBy: { name: 'asc' }
     }),
     prisma.department.findMany({
-      where:
-        user.role === UserRole.SUPERADMIN
-          ? {}
-          : {
-              companyId: user.companyId ?? undefined,
-              ...(user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId ? { id: user.departmentId } : {})
-            },
+      where: { companyId: user.companyId },
       orderBy: { name: 'asc' }
     })
   ]);
 
-  const canManageProjects =
-    user.role === UserRole.SUPERADMIN || user.role === UserRole.COMPANY_ADMIN || user.role === UserRole.DEPARTMENT_MANAGER;
+  const canManageProjects = user.role === UserRole.ADMIN;
 
   const projectToEdit = projects.find((project) => project.id === searchParams?.edit);
 
@@ -73,9 +60,9 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
                 <select
                   name="companyId"
                   required
-                  defaultValue={user.role === UserRole.SUPERADMIN ? '' : user.companyId ?? ''}
+                  defaultValue={user.companyId}
                   className="mt-1 w-full rounded-md border px-3 py-2"
-                  disabled={user.role !== UserRole.SUPERADMIN}
+                  disabled
                 >
                   <option value="">Velg bedrift</option>
                   {companies.map((company) => (
@@ -89,9 +76,8 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
                 Etat
                 <select
                   name="departmentId"
-                  defaultValue={user.role === UserRole.DEPARTMENT_MANAGER ? user.departmentId ?? '' : ''}
+                  defaultValue=""
                   className="mt-1 w-full rounded-md border px-3 py-2"
-                  disabled={user.role === UserRole.DEPARTMENT_MANAGER}
                 >
                   <option value="">Ingen etat</option>
                   {departments.map((department) => (
@@ -122,7 +108,6 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
                     name="departmentId"
                     defaultValue={projectToEdit.departmentId ?? ''}
                     className="mt-1 w-full rounded-md border px-3 py-2"
-                    disabled={user.role === UserRole.DEPARTMENT_MANAGER}
                   >
                     <option value="">Ingen etat</option>
                     {departments.map((department) => (

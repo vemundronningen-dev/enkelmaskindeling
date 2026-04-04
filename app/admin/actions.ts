@@ -7,21 +7,17 @@ import { hashPassword } from '@/lib/password';
 import { prisma } from '@/lib/prisma';
 
 export async function createCompany(formData: FormData) {
-  await requireAdmin();
-
-  const name = formData.get('name')?.toString().trim();
-  if (!name) return;
-
-  await prisma.company.create({ data: { name } });
-  revalidatePath('/admin');
+  void formData;
+  return;
 }
 
 export async function createDepartment(formData: FormData) {
-  await requireAdmin();
+  const user = await requireAdmin();
 
   const name = formData.get('name')?.toString().trim();
   const companyId = formData.get('companyId')?.toString();
   if (!name || !companyId) return;
+  if (companyId !== user.companyId) return;
 
   await prisma.department.create({ data: { name, companyId } });
   revalidatePath('/admin');
@@ -36,7 +32,7 @@ export async function createProject(formData: FormData) {
 
   if (!name || !companyId) return;
 
-  if (user.role === UserRole.COMPANY_ADMIN && user.companyId !== companyId) return;
+  if (user.companyId !== companyId) return;
 
   await prisma.project.create({
     data: {
@@ -62,7 +58,13 @@ export async function createManagedUser(formData: FormData) {
   const departmentId = formData.get('departmentId')?.toString() || null;
 
   if (!name || !email || !password || !role || !companyId) return;
-  if (currentUser.role === UserRole.COMPANY_ADMIN && currentUser.companyId !== companyId) return;
+  if (currentUser.companyId !== companyId) return;
+  if (role !== UserRole.ADMIN && role !== UserRole.USER) return;
+
+  if (departmentId) {
+    const department = await prisma.department.findFirst({ where: { id: departmentId, companyId: currentUser.companyId } });
+    if (!department) return;
+  }
 
   await prisma.user.create({
     data: {

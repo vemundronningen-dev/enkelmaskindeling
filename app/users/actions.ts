@@ -1,5 +1,6 @@
 'use server';
 
+import { UserRole } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
@@ -23,6 +24,7 @@ export async function createUser(formData: FormData) {
       email,
       phone,
       passwordHash: hashPassword(password),
+      role: UserRole.USER,
       companyId: currentUser.companyId
     }
   });

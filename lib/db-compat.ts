@@ -10,7 +10,7 @@ export async function ensureUserAuthColumns() {
     DO $$
     BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'UserRole') THEN
-        CREATE TYPE "UserRole" AS ENUM ('SUPERADMIN', 'COMPANY_ADMIN', 'DEPARTMENT_MANAGER', 'USER');
+        CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'USER');
       END IF;
 
       IF EXISTS (
@@ -26,6 +26,12 @@ export async function ensureUserAuthColumns() {
       END IF;
     END
     $$;
+  `);
+  await prisma.$executeRawUnsafe(`ALTER TYPE "UserRole" ADD VALUE IF NOT EXISTS 'ADMIN';`);
+  await prisma.$executeRawUnsafe(`
+    UPDATE "User"
+    SET "role" = 'ADMIN'::"UserRole"
+    WHERE "role"::text IN ('SUPERADMIN', 'COMPANY_ADMIN', 'DEPARTMENT_MANAGER');
   `);
 
   ensuredUserAuthColumns = true;
