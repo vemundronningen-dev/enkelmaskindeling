@@ -3,6 +3,7 @@
 import { Prisma, UserRole } from '@prisma/client';
 import { redirect } from 'next/navigation';
 import { hashPassword } from '@/lib/password';
+import { ensureDatabaseSetup } from '@/lib/db-init';
 import { prisma } from '@/lib/prisma';
 
 function toQueryError(message: string) {
@@ -10,6 +11,7 @@ function toQueryError(message: string) {
 }
 
 export async function signupCompany(formData: FormData) {
+  console.info('[signup-company] Incoming signup request');
   const companyName = formData.get('companyName')?.toString().trim() ?? '';
   const orgNumberRaw = formData.get('orgNumber')?.toString().trim() ?? '';
   const adminName = formData.get('adminName')?.toString().trim() ?? '';
@@ -28,13 +30,23 @@ export async function signupCompany(formData: FormData) {
     redirect(`/signup-company?error=${toQueryError('E-post kan ikke være tom')}`);
   }
 
+  if (!adminEmail.includes('@')) {
+    redirect(`/signup-company?error=${toQueryError('E-postadressen er ugyldig')}`);
+  }
+
   if (!password) {
     redirect(`/signup-company?error=${toQueryError('Passord kan ikke være tomt')}`);
+  }
+
+  if (password.length < 8) {
+    redirect(`/signup-company?error=${toQueryError('Passord må være minst 8 tegn')}`);
   }
 
   const orgNumber = orgNumberRaw || null;
 
   try {
+    await ensureDatabaseSetup();
+
     await prisma.$transaction(async (tx) => {
       const company = await tx.company.create({
         data: {
@@ -53,7 +65,15 @@ export async function signupCompany(formData: FormData) {
         }
       });
     });
+    console.info('[signup-company] Company and admin created successfully', { companyName, adminEmail });
   } catch (error) {
+    console.error('[signup-company] Failed to create company', {
+      companyName,
+      orgNumber,
+      adminEmail,
+      error
+    });
+
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       const target = Array.isArray(error.meta?.target) ? error.meta?.target.join(',') : String(error.meta?.target ?? '');
 
@@ -68,6 +88,18 @@ export async function signupCompany(formData: FormData) {
       if (target.includes('orgNumber')) {
         redirect(`/signup-company?error=${toQueryError('Organisasjonsnummer er allerede i bruk')}`);
       }
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      redirect(
+        `/signup-company?error=${toQueryError(
+          `Databasefeil (${error.code}). Kunne ikke opprette bedrift.`
+        )}`
+      );
+    }
+
+    if (error instanceof Error) {
+      redirect(`/signup-company?error=${toQueryError(error.message)}`);
     }
 
     redirect(`/signup-company?error=${toQueryError('Kunne ikke opprette bedrift. Prøv igjen.')}`);
