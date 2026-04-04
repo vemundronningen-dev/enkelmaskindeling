@@ -45,7 +45,7 @@ export async function createUser(formData: FormData) {
       data: {
         name,
         email,
-        passwordHash: hashPassword(password),
+        passwordHash: await hashPassword(password),
         role,
         companyId: currentUser.companyId
       }

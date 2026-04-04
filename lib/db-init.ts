@@ -3,6 +3,7 @@ import { hashPassword } from '@/lib/password';
 import { prisma } from '@/lib/prisma';
 
 export async function ensureDatabaseSetup() {
+  await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS pgcrypto;`);
   await prisma.$executeRawUnsafe(`
     DO $$
     BEGIN
@@ -229,7 +230,7 @@ export async function ensureDatabaseSetup() {
         name: 'Systemadmin',
         email: adminEmail,
         phone: '+47 900 00 999',
-        passwordHash: hashPassword('Admin123!'),
+        passwordHash: await hashPassword('Admin123!'),
         role: UserRole.ADMIN,
         companyId: demoCompany.id
       }
@@ -243,7 +244,7 @@ export async function ensureDatabaseSetup() {
       name: 'Vanlig Bruker 1',
       email: 'bruker1@demo.no',
       phone: '+47 900 00 001',
-      passwordHash: hashPassword('Passord123!'),
+      passwordHash: await hashPassword('Passord123!'),
       role: UserRole.USER,
       companyId: demoCompany.id,
       departmentId: anlegg.id
@@ -256,7 +257,7 @@ export async function ensureDatabaseSetup() {
       name: 'Vanlig Bruker 2',
       email: 'bruker2@demo.no',
       phone: '+47 900 00 002',
-      passwordHash: hashPassword('Passord123!'),
+      passwordHash: await hashPassword('Passord123!'),
       role: UserRole.USER,
       companyId: demoCompany.id,
       departmentId: service.id
@@ -283,7 +284,7 @@ export async function ensureDatabaseSetup() {
     for (const user of missingPasswordUsers) {
       await prisma.user.update({
         where: { id: user.id },
-        data: { passwordHash: hashPassword('Passord123!') }
+        data: { passwordHash: await hashPassword('Passord123!') }
       });
     }
   }
