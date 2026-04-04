@@ -1,7 +1,7 @@
 'use server';
 
-import { Prisma } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/auth';
 import { hashPassword } from '@/lib/password';
 import { prisma } from '@/lib/prisma';
@@ -24,9 +24,7 @@ export async function createUser(formData: FormData) {
       passwordHash: hashPassword(password),
       companyId: currentUser.companyId
     }
-
-    throw error;
-  }
+  });
 
   revalidatePath('/users');
   revalidatePath('/machines');
