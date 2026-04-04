@@ -26,9 +26,10 @@ export default async function RootLayout({
     : [];
   const publicMenu = [
     { href: '/#funksjoner', label: 'Funksjoner' },
-    { href: '/#hvorfor-oss', label: 'Hvorfor oss' },
+    { href: '/#slik-fungerer-det', label: 'Slik fungerer det' },
+    { href: '/#for-hvem', label: 'For hvem' },
+    { href: '/#fra-kaos-til-kontroll', label: 'Fra kaos til kontroll' },
     { href: '/signup-company', label: 'Opprett bedrift' },
-    { href: '/demo', label: 'Prøv demo' },
     { href: '/login', label: 'Logg inn' }
   ];
 
@@ -82,11 +83,11 @@ export default async function RootLayout({
               <Link href="/#funksjoner" className="hover:text-slate-900">
                 Funksjoner
               </Link>
-              <Link href="/#hvorfor-oss" className="hover:text-slate-900">
-                Hvorfor oss
+              <Link href="/#slik-fungerer-det" className="hover:text-slate-900">
+                Slik fungerer det
               </Link>
-              <Link href="/demo" className="hover:text-slate-900">
-                Prøv demo
+              <Link href="/#for-hvem" className="hover:text-slate-900">
+                For hvem
               </Link>
               <Link href="/login" className="hover:text-slate-900">
                 Logg inn
