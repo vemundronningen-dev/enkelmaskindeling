@@ -1,12 +1,21 @@
 import { UserRole } from '@prisma/client';
-import { requireAdmin } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { createDepartment, createManagedUser, createProject } from './actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
-  const currentUser = await requireAdmin();
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    redirect('/signup-company');
+  }
+
+  if (currentUser.role !== UserRole.ADMIN) {
+    redirect('/machines');
+  }
 
   const whereCompany = { id: currentUser.companyId };
 
