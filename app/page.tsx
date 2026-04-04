@@ -55,16 +55,16 @@ export default function Home() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Link
-              href="/login"
+              href="/signup-company"
               className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700"
             >
-              Prøv gratis
+              Opprett bedrift
             </Link>
             <Link
-              href="/admin"
+              href="/login"
               className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
             >
-              Opprett bedrift
+              Logg inn
             </Link>
           </div>
         </div>
@@ -134,14 +134,8 @@ export default function Home() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href="/admin" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50">
+            <Link href="/signup-company" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50">
               Opprett bedrift
-            </Link>
-            <Link
-              href="/users"
-              className="rounded-lg border border-white/60 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
-            >
-              Registrer bruker
             </Link>
             <Link
               href="/login"

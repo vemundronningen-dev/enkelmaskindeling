@@ -27,8 +27,8 @@ export default async function RootLayout({
   const publicMenu = [
     { href: '/#funksjoner', label: 'Funksjoner' },
     { href: '/#hvorfor-oss', label: 'Hvorfor oss' },
-    { href: '/admin', label: 'Opprett bedrift' },
-    { href: '/users', label: 'Registrer bruker' }
+    { href: '/signup-company', label: 'Opprett bedrift' },
+    { href: '/login', label: 'Logg inn' }
   ];
 
   return (
@@ -60,8 +60,11 @@ export default async function RootLayout({
                   </form>
                 </>
               ) : (
-                <Link href="/login" className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700">
-                  Logg inn
+                <Link
+                  href="/signup-company"
+                  className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
+                >
+                  Opprett bedrift
                 </Link>
               )}
             </div>

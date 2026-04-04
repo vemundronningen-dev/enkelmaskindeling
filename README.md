@@ -11,6 +11,7 @@ Webapp for maskiner med brukerhierarki, innlogging og automatisk Neon-oppsett.
 
 ## Funksjoner
 - Innlogging med sesjon/cookie (`/login`)
+- Offentlig onboarding for ny bedrift + første admin (`/signup-company`)
 - Adminpanel (`/admin`) for:
   - bedrifter
   - etater
@@ -23,6 +24,16 @@ Webapp for maskiner med brukerhierarki, innlogging og automatisk Neon-oppsett.
 - Tildeling av ansvarlig bruker i tabell
 - `/available` viser ledige maskiner i ditt scope
 - `/projects` viser prosjekter med maskinoversikt
+
+## Onboarding av ny bedrift
+Gå til `/signup-company` og fyll ut:
+- bedriftsnavn
+- organisasjonsnummer (valgfritt)
+- admin navn
+- admin e-post
+- passord
+
+Ved innsending opprettes både bedrift og første bruker i én transaksjon. Brukeren får rollen `ADMIN`, passord hashes før lagring i `passwordHash`, og brukeren kobles til riktig `companyId`.
 
 ## Automatisk oppsett i Neon (no-code)
 Kall endpointet én gang etter deploy:
