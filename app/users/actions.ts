@@ -7,8 +7,24 @@ import { requireAdmin } from '@/lib/auth';
 import { hashPassword } from '@/lib/password';
 import { prisma } from '@/lib/prisma';
 
-function withError(message: string) {
+function withError(message: string): never {
   redirect(`/users?error=${encodeURIComponent(message)}`);
+}
+
+function requireNonEmptyField(formData: FormData, field: string, errorMessage: string) {
+  const value = formData.get(field);
+
+  if (typeof value !== 'string') {
+    withError(errorMessage);
+  }
+
+  const normalizedValue = value.trim();
+
+  if (!normalizedValue) {
+    withError(errorMessage);
+  }
+
+  return normalizedValue;
 }
 
 export async function createUser(formData: FormData) {
@@ -18,24 +34,11 @@ export async function createUser(formData: FormData) {
     withError('Du må være knyttet til en bedrift for å opprette brukere.');
   }
 
-  const name = formData.get('name')?.toString().trim();
-  const email = formData.get('email')?.toString().trim().toLowerCase();
-  const password = formData.get('password')?.toString() ?? '';
-  const roleValue = formData.get('role')?.toString();
-
-  if (!name) {
-    withError('Navn er påkrevd.');
-  }
-
-  if (!email) {
-    withError('E-post er påkrevd.');
-  }
-
-  if (!password) {
-    withError('Passord er påkrevd.');
-  }
-
-  const role = roleValue === UserRole.ADMIN ? UserRole.ADMIN : UserRole.USER;
+  const name = requireNonEmptyField(formData, 'name', 'Navn er påkrevd.');
+  const email = requireNonEmptyField(formData, 'email', 'E-post er påkrevd.').toLowerCase();
+  const password = requireNonEmptyField(formData, 'password', 'Passord er påkrevd.');
+  const roleInput = formData.get('role');
+  const role = roleInput === UserRole.ADMIN ? UserRole.ADMIN : UserRole.USER;
 
   try {
     await prisma.user.create({
