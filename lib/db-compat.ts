@@ -1,23 +1,32 @@
 import { prisma } from '@/lib/prisma';
 
-let ensuredPasswordColumn = false;
+let ensuredUserAuthColumns = false;
 
-export async function ensureUserPasswordHashColumn() {
+export async function ensureUserAuthColumns() {
   if (!process.env.DATABASE_URL) return;
-  if (ensuredPasswordColumn) return;
+  if (ensuredUserAuthColumns) return;
 
   await prisma.$executeRawUnsafe(`
     DO $$
     BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'UserRole') THEN
+        CREATE TYPE "UserRole" AS ENUM ('SUPERADMIN', 'COMPANY_ADMIN', 'DEPARTMENT_MANAGER', 'USER');
+      END IF;
+
       IF EXISTS (
-        SELECT 1 FROM information_schema.tables
+        SELECT 1
+        FROM information_schema.tables
         WHERE table_schema = 'public' AND table_name = 'User'
       ) THEN
-        ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "passwordHash" TEXT;
+        ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "passwordHash" TEXT NOT NULL DEFAULT '';
+        ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "role" "UserRole" NOT NULL DEFAULT 'USER';
+        ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "companyId" TEXT;
+        ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "departmentId" TEXT;
+        ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "phone" TEXT;
       END IF;
     END
     $$;
   `);
 
-  ensuredPasswordColumn = true;
+  ensuredUserAuthColumns = true;
 }
