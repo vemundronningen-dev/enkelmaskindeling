@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { verifyPassword } from '@/lib/password';
 import { createSession, destroySession } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { ensureUserAuthColumns } from '@/lib/db-compat';
 
 export async function login(formData: FormData) {
   const email = formData.get('email')?.toString().trim().toLowerCase();
@@ -12,6 +13,8 @@ export async function login(formData: FormData) {
   if (!email || !password) {
     redirect('/login?error=Mangler+epost+eller+passord');
   }
+
+  await ensureUserAuthColumns();
 
   const user = await prisma.user.findUnique({ where: { email } });
 

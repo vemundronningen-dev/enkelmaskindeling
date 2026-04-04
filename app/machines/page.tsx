@@ -3,7 +3,7 @@ import { StatusBadge } from '@/app/components/status-badge';
 import { ensureDatabaseSetup } from '@/lib/db-init';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/auth';
-import { createMachine, updateMachine, updateResponsibleUser } from './actions';
+import { createMachine, updateMachine, updateMachineProject, updateResponsibleUser } from './actions';
 
 type MachinesPageProps = {
   searchParams?: {
@@ -172,7 +172,21 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
                 <td className="px-3 py-2">{machine.name}</td>
                 <td className="px-3 py-2">{machine.machineNumber}</td>
                 <td className="px-3 py-2">{machine.type}</td>
-                <td className="px-3 py-2">{machine.projectRef?.name ?? machine.project}</td>
+                <td className="px-3 py-2">
+                  <form action={updateMachineProject} className="flex gap-2">
+                    <input type="hidden" name="machineId" value={machine.id} />
+                    <select name="projectId" defaultValue={machine.projectId ?? ''} className="rounded-md border px-2 py-1" required>
+                      {projects.map((project) => (
+                        <option key={project.id} value={project.id}>
+                          {project.name}
+                        </option>
+                      ))}
+                    </select>
+                    <button type="submit" className="rounded-md border px-2 py-1 hover:bg-slate-100">
+                      Lagre
+                    </button>
+                  </form>
+                </td>
                 <td className="px-3 py-2">
                   <StatusBadge status={machine.status} />
                 </td>

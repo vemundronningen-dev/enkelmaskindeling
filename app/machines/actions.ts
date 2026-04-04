@@ -77,6 +77,42 @@ export async function updateMachine(formData: FormData) {
   revalidatePath('/users');
 }
 
+
+export async function updateMachineProject(formData: FormData) {
+  const user = await requireUser();
+  const machineId = formData.get('machineId')?.toString();
+  const projectId = formData.get('projectId')?.toString();
+
+  if (!machineId || !projectId) return;
+
+  const machine = await prisma.machine.findFirst({ where: { id: machineId, ...scopedMachineWhere(user) } });
+  if (!machine) return;
+
+  const project = await prisma.project.findFirst({
+    where:
+      user.role === UserRole.SUPERADMIN
+        ? { id: projectId }
+        : {
+            id: projectId,
+            companyId: user.companyId ?? undefined,
+            ...(user.role === UserRole.DEPARTMENT_MANAGER && user.departmentId ? { departmentId: user.departmentId } : {})
+          }
+  });
+
+  if (!project) return;
+
+  await prisma.machine.update({
+    where: { id: machineId },
+    data: {
+      projectId: project.id,
+      project: project.name
+    }
+  });
+
+  revalidatePath('/machines');
+  revalidatePath('/projects');
+  revalidatePath('/available');
+}
 export async function createMachine(formData: FormData) {
   await requireUser();
 
