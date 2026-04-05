@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { TopNavLink } from '@/app/components/top-nav-link';
 import './globals.css';
 import { getCurrentUser } from '@/lib/auth';
 import { logout } from '@/app/login/actions';
@@ -44,9 +45,9 @@ export default async function RootLayout({
 
             <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
               {(user ? appMenu : publicMenu).map((item) => (
-                <Link key={item.href} href={item.href} className="rounded-md border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-100">
+                <TopNavLink key={item.href} href={item.href} className="rounded-md border border-slate-200 px-3 py-1.5 text-sm hover:bg-slate-100">
                   {item.label}
-                </Link>
+                </TopNavLink>
               ))}
 
               {user ? (

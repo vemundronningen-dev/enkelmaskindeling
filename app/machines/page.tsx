@@ -32,7 +32,21 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
   const [machines, users, projects] = await Promise.all([
     prisma.machine.findMany({
       where: scopeWhere,
-      include: { responsibleUser: true, projectRef: true },
+      select: {
+        id: true,
+        name: true,
+        machineNumber: true,
+        type: true,
+        projectId: true,
+        status: true,
+        responsibleUserId: true,
+        responsibleUser: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      },
       orderBy: { machineNumber: 'asc' }
     }),
     prisma.user.findMany({
