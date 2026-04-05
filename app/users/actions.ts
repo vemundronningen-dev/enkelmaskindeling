@@ -3,7 +3,7 @@
 import { Prisma, UserRole } from '@prisma/client';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { requireAdmin } from '@/lib/auth';
+import { requireAdmin, requireUser } from '@/lib/auth';
 import { hashPassword } from '@/lib/password';
 import { prisma } from '@/lib/prisma';
 
@@ -29,6 +29,20 @@ function requireNonEmptyField(formData: FormData, field: 'name' | 'email' | 'pas
   }
 
   return normalizedValue;
+}
+
+function sanitizePhoneNumber(value: string) {
+  const trimmedValue = value.trim();
+
+  if (!trimmedValue) {
+    return null;
+  }
+
+  return trimmedValue;
+}
+
+function isValidPhoneNumber(value: string) {
+  return /^[+\d][\d\s()-]{5,19}$/.test(value);
 }
 
 export async function createUser(formData: FormData) {
@@ -73,4 +87,73 @@ export async function createUser(formData: FormData) {
   revalidatePath('/users');
   revalidatePath('/machines');
   redirect('/users?success=Brukeren+ble+opprettet#opprett-bruker');
+}
+
+export async function updateUser(formData: FormData) {
+  const currentUser = await requireUser();
+  const userId = formData.get('userId');
+
+  if (typeof userId !== 'string' || !userId.trim()) {
+    redirect('/users?error=Mangler+brukeridentifikator.');
+  }
+
+  const targetUser = await prisma.user.findFirst({
+    where: {
+      id: userId,
+      companyId: currentUser.companyId
+    },
+    select: {
+      id: true,
+      role: true
+    }
+  });
+
+  if (!targetUser) {
+    redirect('/users?error=Fant+ikke+brukeren+du+vil+oppdatere.');
+  }
+
+  if (currentUser.role !== UserRole.ADMIN && currentUser.id !== targetUser.id) {
+    redirect('/users?error=Du+har+ikke+tilgang+til+å+redigere+denne+brukeren.');
+  }
+
+  const name = requireNonEmptyField(formData, 'name', 'Skriv inn et navn for brukeren.');
+  const email = requireNonEmptyField(formData, 'email', 'Skriv inn en e-postadresse.').toLowerCase();
+  const phoneInput = formData.get('phone');
+  const phoneValue = typeof phoneInput === 'string' ? sanitizePhoneNumber(phoneInput) : null;
+
+  if (!email.includes('@')) {
+    redirect(`/users?error=${encodeURIComponent('E-postadressen må inneholde @.')}`);
+  }
+
+  if (phoneValue && !isValidPhoneNumber(phoneValue)) {
+    redirect(`/users?error=${encodeURIComponent('Telefonnummer må være gyldig (kun tall og vanlige tegn).')}`);
+  }
+
+  const requestedRole = formData.get('role');
+  const role =
+    currentUser.role === UserRole.ADMIN && requestedRole === UserRole.ADMIN ? UserRole.ADMIN : UserRole.USER;
+
+  try {
+    await prisma.user.update({
+      where: {
+        id: targetUser.id
+      },
+      data: {
+        name,
+        email,
+        phone: phoneValue,
+        role: currentUser.role === UserRole.ADMIN ? role : targetUser.role
+      }
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      redirect(`/users?error=${encodeURIComponent('E-postadressen er allerede i bruk.')}`);
+    }
+
+    redirect(`/users?error=${encodeURIComponent('Kunne ikke oppdatere bruker. Prøv igjen.')}`);
+  }
+
+  revalidatePath('/users');
+  revalidatePath('/machines');
+  redirect('/users?success=Brukeren+ble+oppdatert');
 }
