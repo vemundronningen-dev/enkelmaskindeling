@@ -1,5 +1,6 @@
 import { UserRole } from '@prisma/client';
 import { redirect } from 'next/navigation';
+import { FormSubmitButton } from '@/app/components/form-submit-button';
 import { getCurrentUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { createDepartment, createManagedUser, createProject } from './actions';
@@ -55,7 +56,11 @@ export default async function AdminPage() {
                 </option>
               ))}
             </select>
-            <button className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white">Opprett etat</button>
+            <FormSubmitButton
+              idleText="Opprett etat"
+              pendingText="Oppretter etat…"
+              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+            />
           </form>
         </div>
 
@@ -79,7 +84,11 @@ export default async function AdminPage() {
                 </option>
               ))}
             </select>
-            <button className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white">Opprett prosjekt</button>
+            <FormSubmitButton
+              idleText="Opprett prosjekt"
+              pendingText="Oppretter prosjekt…"
+              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+            />
           </form>
         </div>
       </div>
@@ -112,7 +121,11 @@ export default async function AdminPage() {
             ))}
           </select>
           <div className="md:col-span-2">
-            <button className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white">Opprett bruker</button>
+            <FormSubmitButton
+              idleText="Opprett bruker"
+              pendingText="Oppretter bruker…"
+              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+            />
           </div>
         </form>
       </div>

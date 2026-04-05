@@ -2,10 +2,20 @@ import { MachineStatus, UserRole } from '@prisma/client';
 import { hashPassword } from '@/lib/password';
 import { prisma } from '@/lib/prisma';
 
-let setupPromise: Promise<void> | null = null;
+type DatabaseSetupResult = {
+  seeded: boolean;
+  companies: number;
+  departments: number;
+  projects: number;
+  users: number;
+  machines: number;
+};
+
+let setupPromise: Promise<DatabaseSetupResult> | null = null;
+let setupResult: DatabaseSetupResult | null = null;
 let isSetupComplete = false;
 
-async function runDatabaseSetup() {
+async function runDatabaseSetup(): Promise<DatabaseSetupResult> {
   await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS pgcrypto;`);
   await prisma.$executeRawUnsafe(`
     DO $$
@@ -302,15 +312,17 @@ async function runDatabaseSetup() {
   };
 }
 
-export async function ensureDatabaseSetup() {
-  if (isSetupComplete) {
-    return;
+export async function ensureDatabaseSetup(): Promise<DatabaseSetupResult> {
+  if (isSetupComplete && setupResult) {
+    return setupResult;
   }
 
   if (!setupPromise) {
     setupPromise = runDatabaseSetup()
-      .then(() => {
+      .then((result) => {
+        setupResult = result;
         isSetupComplete = true;
+        return result;
       })
       .finally(() => {
         if (!isSetupComplete) {
@@ -319,5 +331,5 @@ export async function ensureDatabaseSetup() {
       });
   }
 
-  await setupPromise;
+  return setupPromise;
 }

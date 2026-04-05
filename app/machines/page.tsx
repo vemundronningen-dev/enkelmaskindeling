@@ -1,5 +1,6 @@
 import { MachineStatus } from '@prisma/client';
 import { StatusBadge } from '@/app/components/status-badge';
+import { FormSubmitButton } from '@/app/components/form-submit-button';
 import { ensureDatabaseSetup } from '@/lib/db-init';
 import { prisma } from '@/lib/prisma';
 import { requireUser } from '@/lib/auth';
@@ -84,9 +85,11 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
             </select>
           </label>
           <div className="md:col-span-2">
-            <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-              Opprett maskin
-            </button>
+            <FormSubmitButton
+              idleText="Opprett maskin"
+              pendingText="Oppretter maskin…"
+              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+            />
           </div>
         </form>
       </div>
@@ -139,9 +142,11 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
               </select>
             </label>
             <div className="md:col-span-2">
-              <button type="submit" className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-                Lagre endringer
-              </button>
+              <FormSubmitButton
+                idleText="Lagre endringer"
+                pendingText="Lagrer…"
+                className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+              />
             </div>
           </form>
         </div>
@@ -176,9 +181,11 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
                         </option>
                       ))}
                     </select>
-                    <button type="submit" className="rounded-md border px-2 py-1 hover:bg-slate-100">
-                      Lagre
-                    </button>
+                    <FormSubmitButton
+                      idleText="Lagre"
+                      pendingText="Lagrer…"
+                      className="rounded-md border px-2 py-1 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    />
                   </form>
                 </td>
                 <td className="px-3 py-2">
@@ -199,9 +206,11 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
                         </option>
                       ))}
                     </select>
-                    <button type="submit" className="rounded-md border px-2 py-1 hover:bg-slate-100">
-                      Lagre
-                    </button>
+                    <FormSubmitButton
+                      idleText="Lagre"
+                      pendingText="Lagrer…"
+                      className="rounded-md border px-2 py-1 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    />
                   </form>
                 </td>
                 <td className="px-3 py-2">
