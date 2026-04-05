@@ -1,4 +1,5 @@
 import { UserRole } from '@prisma/client';
+import { FormSubmitButton } from '@/app/components/form-submit-button';
 import { requireUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { createProject, updateProject } from './actions';
@@ -79,9 +80,11 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
                   ))}
                 </select>
               </label>
-              <button className="w-fit rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-                Opprett prosjekt
-              </button>
+              <FormSubmitButton
+                idleText="Opprett prosjekt"
+                pendingText="Oppretter prosjekt…"
+                className="w-fit rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+              />
             </form>
           </div>
 
@@ -109,9 +112,11 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
                     ))}
                   </select>
                 </label>
-                <button className="w-fit rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-                  Lagre endringer
-                </button>
+                <FormSubmitButton
+                  idleText="Lagre endringer"
+                  pendingText="Lagrer…"
+                  className="w-fit rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+                />
               </form>
             </div>
           )}
