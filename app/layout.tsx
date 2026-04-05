@@ -41,9 +41,6 @@ export default async function RootLayout({
             <Link href="/" className="text-lg font-semibold text-slate-900">
               maskindeling.no
             </Link>
-            <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
-              {user ? 'Innlogget app' : 'Offentlig nettside'}
-            </span>
 
             <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
               {(user ? appMenu : publicMenu).map((item) => (
@@ -76,8 +73,11 @@ export default async function RootLayout({
         <footer className="border-t bg-white">
           <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="font-semibold text-slate-900">maskindeling.no</p>
-              <p>Offentlig nettside for informasjon • Innlogget app for daglig drift.</p>
+              <p className="font-semibold text-slate-900">Maskindeling.no (Undervogn AS)</p>
+              <p>Ødegårds vei 9</p>
+              <p>1470 Lørenskog</p>
+              <p className="mt-2">Tlf: +47 469 12 005</p>
+              <p>E-post: post@undervogn.no</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Link href="/#funksjoner" className="hover:text-slate-900">
