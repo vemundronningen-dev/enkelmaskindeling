@@ -3,6 +3,7 @@ import { ensureDatabaseSetup } from '@/lib/db-init';
 import { createUser } from './actions';
 import { requireUser } from '@/lib/auth';
 import { FormSubmitButton } from '@/app/components/form-submit-button';
+import { UserCard } from './user-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -106,28 +107,7 @@ export default async function UsersPage({
           </p>
         )}
         {users.map((user) => (
-          <article key={user.id} className="rounded-xl border bg-white p-4">
-            <h2 className="text-lg font-semibold">{user.name}</h2>
-            <p className="text-sm text-slate-600">{user.email}</p>
-            <p className="text-sm text-slate-600">Rolle: {user.role}</p>
-            <p className="text-sm text-slate-600">
-              {user.company?.name ?? 'Ingen bedrift'} {user.department ? `· ${user.department.name}` : ''}
-            </p>
-            <div className="mt-3">
-              <h3 className="text-sm font-medium">Ansvarlige maskiner</h3>
-              {user.machines.length > 0 ? (
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
-                  {user.machines.map((machine) => (
-                    <li key={machine.id}>
-                      {machine.name} ({machine.machineNumber})
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="mt-2 text-sm text-slate-500">Ingen maskiner tildelt.</p>
-              )}
-            </div>
-          </article>
+          <UserCard key={user.id} user={user} currentUserId={currentUser.id} currentUserRole={currentUser.role} />
         ))}
       </div>
     </section>
