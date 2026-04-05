@@ -30,6 +30,7 @@ async function MachineOverviewTable({ companyId, selectedProjectId }: MachineOve
       name: true,
       machineNumber: true,
       type: true,
+      project: true,
       projectRef: {
         select: {
           name: true
@@ -62,7 +63,7 @@ async function MachineOverviewTable({ companyId, selectedProjectId }: MachineOve
         <tbody>
           {machines.map((machine) => (
             <tr key={machine.id} className="border-t">
-              <td className="px-3 py-2">{machine.projectRef?.name ?? 'Ikke satt'}</td>
+              <td className="px-3 py-2">{machine.projectRef?.name ?? machine.project}</td>
               <td className="px-3 py-2">{machine.name}</td>
               <td className="px-3 py-2">{machine.machineNumber}</td>
               <td className="px-3 py-2">{machine.type}</td>

@@ -89,8 +89,8 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
           </label>
           <label className="text-sm font-medium">
             Prosjekt
-            <select name="projectId" className="mt-1 w-full rounded-md border px-3 py-2" required>
-              <option value="">Velg prosjekt</option>
+            <select name="projectId" className="mt-1 w-full rounded-md border px-3 py-2">
+              <option value="">Ingen prosjekt-tilknytning</option>
               {projects.map((project) => (
                 <option key={project.id} value={project.id}>
                   {project.name}
@@ -137,7 +137,8 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
             </label>
             <label className="text-sm font-medium">
               Prosjekt
-              <select name="projectId" defaultValue={machineToEdit.projectId ?? ''} className="mt-1 w-full rounded-md border px-3 py-2" required>
+              <select name="projectId" defaultValue={machineToEdit.projectId ?? ''} className="mt-1 w-full rounded-md border px-3 py-2">
+                <option value="">Ingen prosjekt-tilknytning</option>
                 {projects.map((project) => (
                   <option key={project.id} value={project.id}>
                     {project.name}
@@ -188,7 +189,8 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
                 <td className="px-3 py-2">
                   <form action={updateMachineProject} className="flex gap-2">
                     <input type="hidden" name="machineId" value={machine.id} />
-                    <select name="projectId" defaultValue={machine.projectId ?? ''} className="rounded-md border px-2 py-1" required>
+                    <select name="projectId" defaultValue={machine.projectId ?? ''} className="rounded-md border px-2 py-1">
+                      <option value="">Ingen prosjekt-tilknytning</option>
                       {projects.map((project) => (
                         <option key={project.id} value={project.id}>
                           {project.name}
