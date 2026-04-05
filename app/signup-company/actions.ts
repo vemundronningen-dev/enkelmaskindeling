@@ -6,8 +6,15 @@ import { hashPassword } from '@/lib/password';
 import { ensureDatabaseSetup } from '@/lib/db-init';
 import { prisma } from '@/lib/prisma';
 
-function toQueryError(message: string) {
-  return encodeURIComponent(message);
+type SignupField = 'companyName' | 'orgNumber' | 'adminName' | 'adminEmail' | 'password';
+
+function withError(message: string, field?: SignupField): never {
+  const params = new URLSearchParams({ error: message });
+  if (field) {
+    params.set('field', field);
+  }
+
+  redirect(`/signup-company?${params.toString()}#opprett-bedrift`);
 }
 
 export async function signupCompany(formData: FormData) {
@@ -19,27 +26,27 @@ export async function signupCompany(formData: FormData) {
   const password = formData.get('password')?.toString() ?? '';
 
   if (!companyName) {
-    redirect(`/signup-company?error=${toQueryError('Bedriftsnavn kan ikke være tomt')}`);
+    withError('Bedriftsnavn kan ikke være tomt.', 'companyName');
   }
 
   if (!adminName) {
-    redirect(`/signup-company?error=${toQueryError('Admin navn kan ikke være tomt')}`);
+    withError('Admin navn kan ikke være tomt.', 'adminName');
   }
 
   if (!adminEmail) {
-    redirect(`/signup-company?error=${toQueryError('E-post kan ikke være tom')}`);
+    withError('E-post kan ikke være tom.', 'adminEmail');
   }
 
   if (!adminEmail.includes('@')) {
-    redirect(`/signup-company?error=${toQueryError('E-postadressen er ugyldig')}`);
+    withError('E-postadressen er ugyldig.', 'adminEmail');
   }
 
   if (!password) {
-    redirect(`/signup-company?error=${toQueryError('Passord kan ikke være tomt')}`);
+    withError('Passord kan ikke være tomt.', 'password');
   }
 
   if (password.length < 8) {
-    redirect(`/signup-company?error=${toQueryError('Passord må være minst 8 tegn')}`);
+    withError('Passord må være minst 8 tegn.', 'password');
   }
 
   const orgNumber = orgNumberRaw || null;
@@ -78,31 +85,27 @@ export async function signupCompany(formData: FormData) {
       const target = Array.isArray(error.meta?.target) ? error.meta?.target.join(',') : String(error.meta?.target ?? '');
 
       if (target.includes('email')) {
-        redirect(`/signup-company?error=${toQueryError('E-post er allerede i bruk')}`);
+        withError('E-post er allerede i bruk.', 'adminEmail');
       }
 
       if (target.includes('name')) {
-        redirect(`/signup-company?error=${toQueryError('Bedriftsnavn er allerede i bruk')}`);
+        withError('Bedriftsnavn er allerede i bruk.', 'companyName');
       }
 
       if (target.includes('orgNumber')) {
-        redirect(`/signup-company?error=${toQueryError('Organisasjonsnummer er allerede i bruk')}`);
+        withError('Organisasjonsnummer er allerede i bruk.', 'orgNumber');
       }
     }
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      redirect(
-        `/signup-company?error=${toQueryError(
-          `Databasefeil (${error.code}). Kunne ikke opprette bedrift.`
-        )}`
-      );
+      withError(`Databasefeil (${error.code}). Kunne ikke opprette bedrift.`);
     }
 
     if (error instanceof Error) {
-      redirect(`/signup-company?error=${toQueryError(error.message)}`);
+      withError(error.message);
     }
 
-    redirect(`/signup-company?error=${toQueryError('Kunne ikke opprette bedrift. Prøv igjen.')}`);
+    withError('Kunne ikke opprette bedrift. Prøv igjen.');
   }
 
   redirect('/login?success=Bedrift+og+admin+ble+opprettet.+Du+kan+logge+inn+nå');
