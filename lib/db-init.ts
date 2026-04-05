@@ -2,20 +2,10 @@ import { MachineStatus, UserRole } from '@prisma/client';
 import { hashPassword } from '@/lib/password';
 import { prisma } from '@/lib/prisma';
 
-type DatabaseSetupResult = {
-  seeded: boolean;
-  companies: number;
-  departments: number;
-  projects: number;
-  users: number;
-  machines: number;
-};
-
-let setupPromise: Promise<DatabaseSetupResult> | null = null;
+let setupPromise: Promise<void> | null = null;
 let isSetupComplete = false;
-let setupResult: DatabaseSetupResult | null = null;
 
-async function runDatabaseSetup(): Promise<DatabaseSetupResult> {
+async function runDatabaseSetup() {
   await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS pgcrypto;`);
   await prisma.$executeRawUnsafe(`
     DO $$
@@ -312,17 +302,15 @@ async function runDatabaseSetup(): Promise<DatabaseSetupResult> {
   };
 }
 
-export async function ensureDatabaseSetup(): Promise<DatabaseSetupResult> {
-  if (isSetupComplete && setupResult) {
-    return setupResult;
+export async function ensureDatabaseSetup() {
+  if (isSetupComplete) {
+    return;
   }
 
   if (!setupPromise) {
     setupPromise = runDatabaseSetup()
-      .then((result) => {
-        setupResult = result;
+      .then(() => {
         isSetupComplete = true;
-        return result;
       })
       .finally(() => {
         if (!isSetupComplete) {
@@ -331,6 +319,5 @@ export async function ensureDatabaseSetup(): Promise<DatabaseSetupResult> {
       });
   }
 
-  const result = await setupPromise;
-  return setupResult ?? result;
+  await setupPromise;
 }
