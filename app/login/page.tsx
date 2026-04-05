@@ -1,6 +1,7 @@
 import { getCurrentUser } from '@/lib/auth';
 import { login } from './actions';
 import { redirect } from 'next/navigation';
+import { FormSubmitButton } from '@/app/components/form-submit-button';
 
 export default async function LoginPage({
   searchParams
@@ -30,9 +31,11 @@ export default async function LoginPage({
           Passord
           <input type="password" name="password" required className="mt-1 w-full rounded-md border px-3 py-2" />
         </label>
-        <button type="submit" className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-          Logg inn
-        </button>
+        <FormSubmitButton
+          idleText="Logg inn"
+          pendingText="Logger inn..."
+          className="w-full rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
+        />
       </form>
     </section>
   );
