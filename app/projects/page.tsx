@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { UserRole } from '@prisma/client';
 import { FormSubmitButton } from '@/app/components/form-submit-button';
 import { requireUser } from '@/lib/auth';
@@ -13,20 +14,112 @@ type ProjectsPageProps = {
   };
 };
 
+type MachineOverviewTableProps = {
+  companyId: string;
+  selectedProjectId?: string;
+};
+
+async function MachineOverviewTable({ companyId, selectedProjectId }: MachineOverviewTableProps) {
+  const machines = await prisma.machine.findMany({
+    where: {
+      companyId,
+      ...(selectedProjectId ? { projectId: selectedProjectId } : {})
+    },
+    select: {
+      id: true,
+      name: true,
+      machineNumber: true,
+      type: true,
+      projectRef: {
+        select: {
+          name: true
+        }
+      },
+      responsibleUser: {
+        select: {
+          name: true,
+          phone: true,
+          email: true
+        }
+      }
+    },
+    orderBy: [{ project: 'asc' }, { machineNumber: 'asc' }]
+  });
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full text-sm">
+        <thead className="bg-slate-100 text-left">
+          <tr>
+            <th className="px-3 py-2">Prosjekt</th>
+            <th className="px-3 py-2">Maskin</th>
+            <th className="px-3 py-2">Serienummer</th>
+            <th className="px-3 py-2">Type</th>
+            <th className="px-3 py-2">Ansvarlig</th>
+            <th className="px-3 py-2">Kontaktinfo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {machines.map((machine) => (
+            <tr key={machine.id} className="border-t">
+              <td className="px-3 py-2">{machine.projectRef?.name ?? 'Ikke satt'}</td>
+              <td className="px-3 py-2">{machine.name}</td>
+              <td className="px-3 py-2">{machine.machineNumber}</td>
+              <td className="px-3 py-2">{machine.type}</td>
+              <td className="px-3 py-2">{machine.responsibleUser?.name ?? 'Ingen ansvarlig'}</td>
+              <td className="px-3 py-2">
+                {machine.responsibleUser ? (
+                  <div className="flex flex-col gap-1">
+                    {machine.responsibleUser.phone ? (
+                      <a href={`tel:${machine.responsibleUser.phone}`} className="text-blue-700 hover:underline">
+                        {machine.responsibleUser.phone}
+                      </a>
+                    ) : (
+                      <span>Telefon mangler</span>
+                    )}
+                    <a href={`mailto:${machine.responsibleUser.email}`} className="text-blue-700 hover:underline">
+                      {machine.responsibleUser.email}
+                    </a>
+                  </div>
+                ) : (
+                  '—'
+                )}
+              </td>
+            </tr>
+          ))}
+          {machines.length === 0 && (
+            <tr className="border-t">
+              <td className="px-3 py-4 text-slate-500" colSpan={6}>
+                Ingen maskiner matcher filtreringen.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default async function ProjectsPage({ searchParams }: ProjectsPageProps) {
   const user = await requireUser();
   const selectedProjectId = searchParams?.projectId;
 
-  const projectScopeWhere = { companyId: user.companyId };
-
-  const [projects, departments, machines] = await Promise.all([
+  const [projects, departments, company] = await Promise.all([
     prisma.project.findMany({
-      where: projectScopeWhere,
-      include: {
-        company: true,
-        department: true,
-        machines: {
-          orderBy: { machineNumber: 'asc' }
+      where: { companyId: user.companyId },
+      select: {
+        id: true,
+        name: true,
+        departmentId: true,
+        department: {
+          select: {
+            name: true
+          }
+        },
+        _count: {
+          select: {
+            machines: true
+          }
         }
       },
       orderBy: { name: 'asc' }
@@ -35,21 +128,13 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
       where: { companyId: user.companyId },
       orderBy: { name: 'asc' }
     }),
-    prisma.machine.findMany({
-      where: {
-        companyId: user.companyId,
-        ...(selectedProjectId ? { projectId: selectedProjectId } : {})
-      },
-      include: {
-        projectRef: true,
-        responsibleUser: true
-      },
-      orderBy: [{ project: 'asc' }, { machineNumber: 'asc' }]
+    prisma.company.findUnique({
+      where: { id: user.companyId },
+      select: { name: true }
     })
   ]);
 
   const canManageProjects = user.role === UserRole.ADMIN;
-
   const projectToEdit = projects.find((project) => project.id === searchParams?.edit);
 
   return (
@@ -138,9 +223,9 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
             {projects.map((project) => (
               <tr key={project.id} className="border-t">
                 <td className="px-3 py-2 font-medium">{project.name}</td>
-                <td className="px-3 py-2">{project.company.name}</td>
+                <td className="px-3 py-2">{company?.name ?? '—'}</td>
                 <td className="px-3 py-2">{project.department?.name ?? '—'}</td>
-                <td className="px-3 py-2">{project.machines.length}</td>
+                <td className="px-3 py-2">{project._count.machines}</td>
                 {canManageProjects && (
                   <td className="px-3 py-2">
                     <a href={`/projects?edit=${project.id}`} className="rounded-md border px-2 py-1 hover:bg-slate-100">
@@ -182,56 +267,12 @@ export default async function ProjectsPage({ searchParams }: ProjectsPageProps) 
           </form>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-100 text-left">
-              <tr>
-                <th className="px-3 py-2">Prosjekt</th>
-                <th className="px-3 py-2">Maskin</th>
-                <th className="px-3 py-2">Serienummer</th>
-                <th className="px-3 py-2">Type</th>
-                <th className="px-3 py-2">Ansvarlig</th>
-                <th className="px-3 py-2">Kontaktinfo</th>
-              </tr>
-            </thead>
-            <tbody>
-              {machines.map((machine) => (
-                <tr key={machine.id} className="border-t">
-                  <td className="px-3 py-2">{machine.projectRef?.name ?? 'Ikke satt'}</td>
-                  <td className="px-3 py-2">{machine.name}</td>
-                  <td className="px-3 py-2">{machine.machineNumber}</td>
-                  <td className="px-3 py-2">{machine.type}</td>
-                  <td className="px-3 py-2">{machine.responsibleUser?.name ?? 'Ingen ansvarlig'}</td>
-                  <td className="px-3 py-2">
-                    {machine.responsibleUser ? (
-                      <div className="flex flex-col gap-1">
-                        {machine.responsibleUser.phone ? (
-                          <a href={`tel:${machine.responsibleUser.phone}`} className="text-blue-700 hover:underline">
-                            {machine.responsibleUser.phone}
-                          </a>
-                        ) : (
-                          <span>Telefon mangler</span>
-                        )}
-                        <a href={`mailto:${machine.responsibleUser.email}`} className="text-blue-700 hover:underline">
-                          {machine.responsibleUser.email}
-                        </a>
-                      </div>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {machines.length === 0 && (
-                <tr className="border-t">
-                  <td className="px-3 py-4 text-slate-500" colSpan={6}>
-                    Ingen maskiner matcher filtreringen.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <Suspense
+          key={selectedProjectId ?? 'all-projects'}
+          fallback={<p className="px-3 py-4 text-sm text-slate-500">Laster maskinoversikt…</p>}
+        >
+          <MachineOverviewTable companyId={user.companyId} selectedProjectId={selectedProjectId} />
+        </Suspense>
       </div>
     </section>
   );
