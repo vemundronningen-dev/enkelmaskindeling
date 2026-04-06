@@ -13,9 +13,12 @@ type MachinesPageProps = {
 };
 
 const statusOptions: { value: MachineStatus; label: string }[] = [
-  { value: MachineStatus.LEDIG, label: 'Ledig' },
+  { value: MachineStatus.LEDIG, label: 'Tilgjengelig' },
   { value: MachineStatus.TILDELT, label: 'Tildelt' },
-  { value: MachineStatus.SERVICE, label: 'Service' }
+  { value: MachineStatus.BOOKET, label: 'Booket' },
+  { value: MachineStatus.I_BRUK, label: 'I bruk' },
+  { value: MachineStatus.SERVICE, label: 'Service' },
+  { value: MachineStatus.UTE_AV_DRIFT, label: 'Ute av drift' }
 ];
 
 export const dynamic = 'force-dynamic';
@@ -230,9 +233,14 @@ export default async function MachinesPage({ searchParams }: MachinesPageProps) 
                   </form>
                 </td>
                 <td className="px-3 py-2">
-                  <a href={`/machines?edit=${machine.id}`} className="rounded-md border px-2 py-1 hover:bg-slate-100">
-                    Rediger
-                  </a>
+                  <div className="flex flex-wrap gap-2">
+                    <a href={`/machines?edit=${machine.id}`} className="rounded-md border px-2 py-1 hover:bg-slate-100">
+                      Rediger
+                    </a>
+                    <a href={`/machines/${machine.id}`} className="rounded-md border px-2 py-1 hover:bg-slate-100">
+                      Åpne
+                    </a>
+                  </div>
                 </td>
               </tr>
             ))}
