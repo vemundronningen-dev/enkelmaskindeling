@@ -22,6 +22,7 @@ export default async function RootLayout({
         { href: '/available', label: 'Ledige maskiner' },
         { href: '/users', label: 'Brukere' },
         { href: '/projects', label: 'Prosjekter' },
+        ...(user.role === 'ADMIN' ? [{ href: '/planner', label: 'Planlegger' }] : []),
         { href: '/admin', label: 'Admin' }
       ]
     : [];
